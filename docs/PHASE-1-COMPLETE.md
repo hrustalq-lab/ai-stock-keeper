@@ -1,7 +1,8 @@
 # Phase 1: Core Architecture - ЗАВЕРШЕНО ✅
 
 **Дата завершения:** 2026-01-31  
-**Статус:** Готово к тестированию
+**Обновлено:** 2026-01-31 (добавлены тесты, CI, webhook security)  
+**Статус:** ✅ Полностью завершено
 
 ---
 
@@ -56,6 +57,34 @@ npm run mock:1c
 - `POST /documents/goods-receipt` - приходная накладная
 - `POST /documents/shipment` - отгрузка
 - `POST /documents/transfer` - перемещение
+- `POST /webhook/test` - отправить тестовый webhook с подписью
+
+### 5. Безопасность
+
+| Компонент | Описание | Файл |
+|-----------|----------|------|
+| Webhook HMAC-SHA256 | Валидация подписи входящих webhook | `src/server/lib/webhook-signature.ts` |
+| Timing-safe сравнение | Защита от timing attacks | `crypto.timingSafeEqual()` |
+
+### 6. Queue Worker
+
+| Компонент | Описание | Файл |
+|-----------|----------|------|
+| Worker | Обработчик очереди задач | `scripts/worker.ts` |
+| Polling + Pub/Sub | Dual mode для real-time и batch | Redis subscribe + DB polling |
+
+### 7. Тестирование
+
+| Компонент | Тесты | Coverage |
+|-----------|-------|----------|
+| Webhook Signature | 15 тестов | 100% |
+| OneCAuth | 9 тестов | 100% |
+
+### 8. CI/CD
+
+| Компонент | Описание | Файл |
+|-----------|----------|------|
+| GitHub Actions | Lint, Typecheck, Unit Tests, Integration Tests, Build | `.github/workflows/ci.yml` |
 
 ---
 
@@ -151,6 +180,11 @@ curl -X POST http://localhost:3000/api/webhooks/one-c \
 
 ```
 src/
+├── __tests__/
+│   ├── setup.ts                      # Jest setup
+│   └── unit/
+│       ├── webhook-signature.test.ts # Тесты подписи
+│       └── one-c-auth.test.ts        # Тесты авторизации
 ├── app/
 │   └── api/
 │       └── webhooks/
@@ -163,7 +197,8 @@ src/
 │   ├── db/
 │   │   └── index.ts                  # Prisma Client
 │   ├── lib/
-│   │   └── redis.ts                  # Redis Client
+│   │   ├── redis.ts                  # Redis Client
+│   │   └── webhook-signature.ts      # HMAC-SHA256 подпись
 │   ├── services/
 │   │   ├── one-c-auth.ts             # 1C аутентификация
 │   │   ├── one-c-client.ts           # 1C HTTP клиент
@@ -176,12 +211,17 @@ mock-1c/
 └── server.ts                         # Mock 1C Server
 
 scripts/
-└── sync-initial.ts                   # Начальная синхронизация
+├── sync-initial.ts                   # Начальная синхронизация
+└── worker.ts                         # Queue Worker
 
 prisma/
 └── schema.prisma                     # Схема БД
 
+.github/workflows/
+└── ci.yml                            # GitHub Actions CI
+
 docker-compose.yml                    # PostgreSQL + Redis
+jest.config.js                        # Jest конфигурация
 ```
 
 ---
@@ -189,8 +229,8 @@ docker-compose.yml                    # PostgreSQL + Redis
 ## ⚠️ Известные ограничения
 
 1. **Mock 1C Server** - только для разработки, не для production
-2. **Webhook подпись** - валидация подписи закомментирована (TODO)
-3. **Bull Queue** - воркер не запускается автоматически (нужен отдельный процесс)
+2. ~~**Webhook подпись** - валидация подписи закомментирована (TODO)~~ ✅ Реализовано
+3. ~~**Bull Queue** - воркер не запускается автоматически~~ ✅ Реализовано (`npm run worker`)
 
 ---
 
@@ -216,3 +256,8 @@ docker-compose.yml                    # PostgreSQL + Redis
 | `npm run db:studio` | Открыть Prisma Studio |
 | `npm run mock:1c` | Запуск Mock 1C Server |
 | `npm run sync:initial` | Начальная синхронизация |
+| `npm run worker` | Запуск Queue Worker |
+| `npm run test` | Запуск всех тестов |
+| `npm run test:unit` | Только unit-тесты |
+| `npm run test:integration` | Только integration-тесты |
+| `npm run test:coverage` | Тесты с отчётом покрытия |

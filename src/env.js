@@ -22,6 +22,9 @@ export const env = createEnv({
     
     // Bull Queue
     BULL_QUEUE_NAME: z.string().default("1c-sync-queue"),
+    
+    // Webhook Security
+    ONE_C_WEBHOOK_SECRET: z.string().min(16).optional(),
   },
 
   /**
@@ -43,6 +46,7 @@ export const env = createEnv({
     ONE_C_PASSWORD: process.env.ONE_C_PASSWORD,
     ONE_C_WAREHOUSE_ID: process.env.ONE_C_WAREHOUSE_ID,
     BULL_QUEUE_NAME: process.env.BULL_QUEUE_NAME,
+    ONE_C_WEBHOOK_SECRET: process.env.ONE_C_WEBHOOK_SECRET,
   },
 
   /**

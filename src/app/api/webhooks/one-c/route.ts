@@ -1,6 +1,8 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { db } from "~/server/db";
 import { redis } from "~/server/lib/redis";
+import { validateWebhookSignature } from "~/server/lib/webhook-signature";
+import { env } from "~/env";
 import { z } from "zod";
 
 // ============================================
@@ -45,8 +47,20 @@ const WebhookPayloadSchema = z.object({
  */
 export async function POST(req: NextRequest) {
   try {
+    // Читаем raw body для проверки подписи
+    const rawBody = await req.text();
+    
     // Парсим и валидируем payload
-    const rawPayload: unknown = await req.json();
+    let rawPayload: unknown;
+    try {
+      rawPayload = JSON.parse(rawBody);
+    } catch {
+      return NextResponse.json(
+        { ok: false, error: "Invalid JSON" },
+        { status: 400 }
+      );
+    }
+    
     const parseResult = WebhookPayloadSchema.safeParse(rawPayload);
 
     if (!parseResult.success) {
@@ -58,13 +72,23 @@ export async function POST(req: NextRequest) {
     }
 
     const payload = parseResult.data;
-    console.log(`[1C Webhook] Получено событие: ${payload.event}`, payload.data);
 
-    // TODO: Валидация подписи webhook (если 1C её отправляет)
-    // const signature = req.headers.get("x-1c-signature");
-    // if (!validateSignature(signature, rawPayload)) {
-    //   return NextResponse.json({ ok: false, error: "Invalid signature" }, { status: 401 });
-    // }
+    // Валидация подписи HMAC-SHA256 (если секрет настроен)
+    const webhookSecret = env.ONE_C_WEBHOOK_SECRET;
+    if (webhookSecret) {
+      const signature = req.headers.get("x-1c-signature");
+      const isValid = validateWebhookSignature(signature, rawBody, webhookSecret);
+      
+      if (!isValid) {
+        console.warn("[1C Webhook] Невалидная подпись:", signature?.slice(0, 20) + "...");
+        return NextResponse.json(
+          { ok: false, error: "Invalid signature" },
+          { status: 401 }
+        );
+      }
+    }
+    
+    console.log(`[1C Webhook] Получено событие: ${payload.event}`, payload.data);
 
     // Добавляем в очередь обработки
     await db.syncQueue.create({

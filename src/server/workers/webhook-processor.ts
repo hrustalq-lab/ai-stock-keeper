@@ -1,5 +1,6 @@
 import { db } from "~/server/db";
 import { inventoryCache, type InventoryData } from "~/server/services/inventory-cache";
+import { alertService } from "~/server/services/alert-service";
 
 // ============================================
 // Типы событий webhook
@@ -75,6 +76,18 @@ async function handleGoodsUpdated(data: GoodsEventData): Promise<void> {
 
   await inventoryCache.updateCache(inventoryData);
   console.log(`[Webhook Processor] Товар обновлен: ${data.sku}`);
+
+  // Phase 3: Проверяем алерты для обновлённого товара
+  try {
+    await alertService.checkAlerts(
+      data.sku,
+      data.warehouse,
+      data.quantity,
+      data.name
+    );
+  } catch (error) {
+    console.error(`[Webhook Processor] Ошибка проверки алертов для ${data.sku}:`, error);
+  }
 }
 
 /**

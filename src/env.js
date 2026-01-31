@@ -25,6 +25,13 @@ export const env = createEnv({
     
     // Webhook Security
     ONE_C_WEBHOOK_SECRET: z.string().min(16).optional(),
+    
+    // Email (Resend) - Phase 3
+    RESEND_API_KEY: z.string().optional(),
+    RESEND_FROM_EMAIL: z.string().default("alerts@localhost"),
+    
+    // Alert defaults
+    ALERT_DEFAULT_COOLDOWN_MINS: z.coerce.number().default(60),
   },
 
   /**
@@ -47,6 +54,9 @@ export const env = createEnv({
     ONE_C_WAREHOUSE_ID: process.env.ONE_C_WAREHOUSE_ID,
     BULL_QUEUE_NAME: process.env.BULL_QUEUE_NAME,
     ONE_C_WEBHOOK_SECRET: process.env.ONE_C_WEBHOOK_SECRET,
+    RESEND_API_KEY: process.env.RESEND_API_KEY,
+    RESEND_FROM_EMAIL: process.env.RESEND_FROM_EMAIL,
+    ALERT_DEFAULT_COOLDOWN_MINS: process.env.ALERT_DEFAULT_COOLDOWN_MINS,
   },
 
   /**

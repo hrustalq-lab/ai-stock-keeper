@@ -31,4 +31,14 @@ if (process.env.NODE_ENV !== "production") {
 }
 
 // Экспортируем типы для удобства
-export type { Inventory, Transaction, Document1C, AuditLog, SyncQueue } from "@prisma/client";
+export type {
+  Inventory,
+  Transaction,
+  Document1C,
+  AuditLog,
+  SyncQueue,
+  // Phase 3
+  AlertRule,
+  AlertHistory,
+  InventorySnapshot,
+} from "@prisma/client";

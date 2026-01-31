@@ -101,3 +101,66 @@ model SyncQueue {
   @@index([status])
   @@map("sync_queue")
 }
+
+// ============================================
+// Phase 3: Правила алертов
+// ============================================
+model AlertRule {
+  id              Int       @id @default(autoincrement())
+  name            String    @db.VarChar(100)
+  sku             String?   @db.VarChar(50)   // null = все товары
+  warehouse       String?   @db.VarChar(50)   // null = все склады
+  condition       String    @db.VarChar(20)   // "below", "above", "equals"
+  threshold       Int
+  channel         String    @db.VarChar(20)   // "email", "webhook"
+  recipient       String    @db.VarChar(255)  // email/url
+  isActive        Boolean   @default(true) @map("is_active")
+  cooldownMins    Int       @default(60) @map("cooldown_mins")
+  lastTriggeredAt DateTime? @map("last_triggered_at")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  @@index([sku])
+  @@index([isActive])
+  @@map("alert_rules")
+}
+
+// ============================================
+// Phase 3: История алертов
+// ============================================
+model AlertHistory {
+  id           Int      @id @default(autoincrement())
+  ruleId       Int      @map("rule_id")
+  ruleName     String   @map("rule_name") @db.VarChar(100)
+  sku          String   @db.VarChar(50)
+  productName  String?  @map("product_name") @db.VarChar(255)
+  warehouse    String   @db.VarChar(50)
+  oldValue     Int      @map("old_value")
+  newValue     Int      @map("new_value")
+  threshold    Int
+  channel      String   @db.VarChar(20)
+  status       String   @db.VarChar(20) // "sent", "failed"
+  errorMessage String?  @map("error_message")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  @@index([ruleId])
+  @@index([createdAt])
+  @@map("alert_history")
+}
+
+// ============================================
+// Phase 3: Снапшоты инвентаря
+// ============================================
+model InventorySnapshot {
+  id         Int      @id @default(autoincrement())
+  warehouse  String   @db.VarChar(50)
+  snapshot   Json     // { "SKU-001": 100, "SKU-002": 50, ... }
+  totalItems Int      @map("total_items")
+  totalQty   Int      @map("total_qty")
+  source     String   @db.VarChar(20) // "local", "1c"
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@index([warehouse])
+  @@index([createdAt])
+  @@map("inventory_snapshots")
+}

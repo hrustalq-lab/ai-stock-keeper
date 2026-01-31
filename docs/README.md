@@ -5,7 +5,8 @@
 | Role | Start Here | Then Read |
 |------|-----------|-----------|
 | **Project Manager** | [AI-STOCK-KEEPER-PLAN.md](./AI-STOCK-KEEPER-PLAN.md) | TOOLS-RESEARCH.md |
-| **Developer (Phase 1)** | [PHASE-1.md](./PHASE-1.md) | INTEGRATION-TESTING-PLAN.md |
+| **Developer (Phase 1)** | [PHASE-1-COMPLETE.md](./PHASE-1-COMPLETE.md) | PHASE-2.md |
+| **Developer (Phase 2)** | [PHASE-2.md](./PHASE-2.md) | TOOLS-RESEARCH.md (OCR section) |
 | **QA / Testing** | [INTEGRATION-TESTING-PLAN.md](./INTEGRATION-TESTING-PLAN.md) | PHASE-1.md |
 | **DevOps / Infra** | [TOOLS-RESEARCH.md](./TOOLS-RESEARCH.md) | INTEGRATION-TESTING-PLAN.md (CI/CD section) |
 | **1C Integrator** | [1C-INTEGRATION-RESEARCH.md](./1C-INTEGRATION-RESEARCH.md) | PHASE-1.md (sections 1.5-1.6) |
@@ -31,18 +32,29 @@
    - Community resources & real examples
    - Risks & mitigations for Phase 1
 
-4. **[PHASE-1.md](./PHASE-1.md)** — Week-by-week implementation guide
+4. **[PHASE-1.md](./PHASE-1.md)** — Phase 1 implementation guide (reference)
    - Day-by-day breakdown (10 working days)
    - Complete code examples (PostgreSQL schema, 1C auth, webhooks)
    - Testing checklist & success criteria
 
-5. **[INTEGRATION-TESTING-PLAN.md](./INTEGRATION-TESTING-PLAN.md)** — Test strategy & framework ✅
+5. **[PHASE-1-COMPLETE.md](./PHASE-1-COMPLETE.md)** — Phase 1 завершён ✅
+   - Что было создано (сервисы, API, тесты)
+   - Как запустить и протестировать
+   - NPM scripts reference
+
+6. **[PHASE-2.md](./PHASE-2.md)** — Phase 2: Goods Intake with OCR 📋
+   - Barcode scanning (Quagga.js)
+   - OCR recognition (Tesseract.js)
+   - Product matching (Fuse.js)
+   - UI компоненты и страницы
+   - Таймлайн: 2 недели
+
+7. **[INTEGRATION-TESTING-PLAN.md](./INTEGRATION-TESTING-PLAN.md)** — Test strategy & framework
    - **Decision:** Keep tRPC + Next.js (no separate Express/NestJS needed for MVP)
    - Test pyramid: 60% unit, 30% integration, 10% E2E
    - Jest setup + example tests for 1C, webhooks, database
    - Mock vs real sandbox strategies
    - CI/CD (GitHub Actions) setup
-   - When to consider Express/NestJS (>10K req/sec, microservices)
 
 ## Architecture Overview
 
@@ -68,24 +80,36 @@ Integration
 
 | Use Case | Timeline | Status |
 |----------|----------|--------|
-| Goods intake with AI recognition | Week 3-5 | Planning |
-| Real-time inventory sync | Week 6-7 | Planning |
-| Predictive stock alerts | Week 8-10 | Planning |
-| Intelligent picking optimization | Week 11-13 | Planning |
-| Multi-warehouse management | Week 14-15 | Planning |
-| Mobile app | Week 16-18 | Planning |
+| Core architecture (1C integration) | Week 1-2 | ✅ Complete |
+| Goods intake with AI recognition | Week 3-5 | 📋 Planning |
+| Real-time inventory sync | Week 6-7 | ⬜ Pending |
+| Predictive stock alerts | Week 8-10 | ⬜ Pending |
+| Intelligent picking optimization | Week 11-13 | ⬜ Pending |
+| Multi-warehouse management | Week 14-15 | ⬜ Pending |
+| Mobile app | Week 16-18 | ⬜ Pending |
 
-## Next Steps
+## Current Phase
 
-1. **Week 1:** Set up 1C sandbox, validate API connectivity
-2. **Week 2:** Build core architecture (auth, sync, caching)
-3. **Week 3:** Start Phase 2 - goods intake MVP
+**Phase 2: Goods Intake with OCR** — [PHASE-2.md](./PHASE-2.md)
+
+| Блок | Описание | Статус |
+|------|----------|--------|
+| Блок 1 | Библиотеки и сервисы | ⬜ |
+| Блок 2 | UI компоненты | ⬜ |
+| Блок 3 | Backend API | ⬜ |
+| Блок 4 | Страницы | ⬜ |
+| Блок 5 | Тестирование | ⬜ |
 
 ## File Structure
 
 ```
 docs/
-├── README.md (this file)
-├── AI-STOCK-KEEPER-PLAN.md
-└── TOOLS-RESEARCH.md
+├── README.md                    # Навигация (этот файл)
+├── AI-STOCK-KEEPER-PLAN.md      # Общий план проекта
+├── TOOLS-RESEARCH.md            # Исследование технологий
+├── 1C-INTEGRATION-RESEARCH.md   # Исследование 1C API
+├── PHASE-1.md                   # План Phase 1 (reference)
+├── PHASE-1-COMPLETE.md          # Phase 1 — завершён ✅
+├── PHASE-2.md                   # Phase 2 — текущий 📋
+└── INTEGRATION-TESTING-PLAN.md  # Стратегия тестирования
 ```

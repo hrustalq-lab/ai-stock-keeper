@@ -7,6 +7,7 @@
 | **Project Manager** | [AI-STOCK-KEEPER-PLAN.md](./AI-STOCK-KEEPER-PLAN.md) | TOOLS-RESEARCH.md |
 | **Developer (Phase 1)** | [PHASE-1-COMPLETE.md](./PHASE-1-COMPLETE.md) | PHASE-2.md |
 | **Developer (Phase 2)** | [PHASE-2.md](./PHASE-2.md) | TOOLS-RESEARCH.md (OCR section) |
+| **Developer (Phase 3)** | [PHASE-3.md](./PHASE-3.md) | TOOLS-RESEARCH.md (Alerts section) |
 | **QA / Testing** | [INTEGRATION-TESTING-PLAN.md](./INTEGRATION-TESTING-PLAN.md) | PHASE-1.md |
 | **DevOps / Infra** | [TOOLS-RESEARCH.md](./TOOLS-RESEARCH.md) | INTEGRATION-TESTING-PLAN.md (CI/CD section) |
 | **1C Integrator** | [1C-INTEGRATION-RESEARCH.md](./1C-INTEGRATION-RESEARCH.md) | PHASE-1.md (sections 1.5-1.6) |
@@ -42,14 +43,21 @@
    - Как запустить и протестировать
    - NPM scripts reference
 
-6. **[PHASE-2.md](./PHASE-2.md)** — Phase 2: Goods Intake with OCR 📋
+6. **[PHASE-2.md](./PHASE-2.md)** — Phase 2: Goods Intake with OCR ✅
    - Barcode scanning (Quagga.js)
    - OCR recognition (Tesseract.js)
    - Product matching (Fuse.js)
    - UI компоненты и страницы
    - Таймлайн: 2 недели
 
-7. **[INTEGRATION-TESTING-PLAN.md](./INTEGRATION-TESTING-PLAN.md)** — Test strategy & framework
+7. **[PHASE-3.md](./PHASE-3.md)** — Phase 3: Real-Time Dashboard 📋
+   - SSE (Server-Sent Events) для real-time обновлений
+   - Dashboard с виджетами и графиками (Recharts)
+   - Alert system с email уведомлениями (Resend)
+   - Inventory diff & reconciliation
+   - Таймлайн: 2 недели
+
+8. **[INTEGRATION-TESTING-PLAN.md](./INTEGRATION-TESTING-PLAN.md)** — Test strategy & framework
    - **Decision:** Keep tRPC + Next.js (no separate Express/NestJS needed for MVP)
    - Test pyramid: 60% unit, 30% integration, 10% E2E
    - Jest setup + example tests for 1C, webhooks, database
@@ -63,14 +71,17 @@ Frontend (T3 Stack)
 ├── Next.js + React + TypeScript
 ├── Tailwind CSS
 ├── tRPC (type-safe API)
-└── Tesseract.js (OCR), Quagga.js (barcode)
+├── Tesseract.js (OCR), Quagga.js (barcode)
+├── Recharts (dashboard charts)
+└── SSE (real-time updates)
 
 Backend
-├── PostgreSQL (inventory, transactions)
-├── Redis (cache, real-time)
+├── PostgreSQL (inventory, transactions, alerts)
+├── Redis (cache, real-time pub/sub)
 ├── Bull (async 1C sync queue)
-├── Prophet (forecasting microservice)
-└── Google Vision API (production OCR)
+├── Resend (email notifications)
+├── Prophet (forecasting microservice) [Phase 4]
+└── Google Vision API (production OCR) [Future]
 
 Integration
 └── 1C ERP (REST API, webhooks)
@@ -82,7 +93,7 @@ Integration
 |----------|----------|--------|
 | Core architecture (1C integration) | Week 1-2 | ✅ Complete |
 | Goods intake with AI recognition | Week 3-5 | ✅ Complete |
-| Real-time inventory sync | Week 6-7 | ⬜ Pending |
+| Real-time inventory sync | Week 6-7 | 📋 Planning |
 | Predictive stock alerts | Week 8-10 | ⬜ Pending |
 | Intelligent picking optimization | Week 11-13 | ⬜ Pending |
 | Multi-warehouse management | Week 14-15 | ⬜ Pending |
@@ -90,17 +101,18 @@ Integration
 
 ## Current Phase
 
-**Phase 2: Goods Intake with OCR** — ✅ Завершён [PHASE-2.md](./PHASE-2.md)
+**Phase 3: Real-Time Dashboard** — 📋 В планировании [PHASE-3.md](./PHASE-3.md)
 
 | Блок | Описание | Статус |
 |------|----------|--------|
-| Блок 1 | Библиотеки и сервисы | ✅ |
-| Блок 2 | UI компоненты | ✅ |
-| Блок 3 | Backend API | ✅ |
-| Блок 4 | Страницы | ✅ |
-| Блок 5 | Тестирование | ✅ |
+| Блок 1 | SSE Infrastructure | ⬜ |
+| Блок 2 | Dashboard UI (Recharts) | ⬜ |
+| Блок 3 | Alert System (Resend) | ⬜ |
+| Блок 4 | Inventory Diff | ⬜ |
+| Блок 5 | Backend API | ⬜ |
+| Блок 6 | Тестирование | ⬜ |
 
-**Следующий:** Phase 3 — Real-Time Inventory Sync (Dashboard)
+**Следующий:** Phase 4 — Predictive Analytics
 
 ## File Structure
 
@@ -112,6 +124,7 @@ docs/
 ├── 1C-INTEGRATION-RESEARCH.md   # Исследование 1C API
 ├── PHASE-1.md                   # План Phase 1 (reference)
 ├── PHASE-1-COMPLETE.md          # Phase 1 — завершён ✅
-├── PHASE-2.md                   # Phase 2 — текущий 📋
+├── PHASE-2.md                   # Phase 2 — завершён ✅
+├── PHASE-3.md                   # Phase 3 — текущий 📋
 └── INTEGRATION-TESTING-PLAN.md  # Стратегия тестирования
 ```

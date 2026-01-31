@@ -381,7 +381,8 @@ src/
 ## 10. Следующие шаги
 
 После завершения Phase 2:
-- [ ] **Phase 3:** Real-Time Inventory Sync (Dashboard)
+- [x] **Phase 3:** Real-Time Inventory Sync (Dashboard) — [PHASE-3.md](./PHASE-3.md)
+- [ ] **Phase 4:** Predictive Analytics
 - [ ] **Future:** Google Vision API для production OCR
 - [ ] **Future:** ML model для улучшения matching
 

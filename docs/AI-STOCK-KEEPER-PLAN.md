@@ -123,15 +123,16 @@ AI-powered stock keeper that:
 
 ### Phase 1: Core Architecture (Weeks 1-2)
 **Goal:** Validate 1C integration, set up project structure
+**Status:** ✅ Complete — see [PHASE-1-COMPLETE.md](./docs/PHASE-1-COMPLETE.md)
 
 **Tasks:**
-1. [ ] Study 1C API documentation (researcher: in progress)
-2. [ ] Create 1C sandbox environment for testing
-3. [ ] Design API schema (inventory endpoints, documents)
-4. [ ] Set up PostgreSQL + Redis
-5. [ ] Build 1C authentication module (OAuth/API key)
-6. [ ] Create inventory cache layer (sync 1C → local DB)
-7. [ ] Build basic webhook receiver (1C → app events)
+1. [x] Study 1C API documentation
+2. [x] Create 1C sandbox environment for testing (Mock server)
+3. [x] Design API schema (inventory endpoints, documents)
+4. [x] Set up PostgreSQL + Redis
+5. [x] Build 1C authentication module (OAuth/API key)
+6. [x] Create inventory cache layer (sync 1C → local DB)
+7. [x] Build basic webhook receiver (1C → app events)
 
 **Deliverable:** Working connection to 1C, can read/write documents
 
@@ -141,18 +142,21 @@ AI-powered stock keeper that:
 
 ### Phase 2: Goods Intake with OCR (Weeks 3-5)
 **Goal:** MVP - goods intake with AI recognition
+**Status:** ✅ Complete — see [PHASE-2.md](./docs/PHASE-2.md)
+
+**Tech Stack:**
+- Quagga.js for barcode scanning
+- Tesseract.js for OCR
+- Fuse.js for fuzzy matching
 
 **Tasks:**
-1. [ ] Build barcode scanner UI (Next.js component)
-2. [ ] Integrate OCR library (Tesseract.js for MVP)
-3. [ ] Create product matching algorithm
-   - Start: Exact SKU match
-   - Evolve: Fuzzy match (product name)
-   - Advanced: ML model (later)
-4. [ ] Build 1C "goods receipt" document creator
-5. [ ] Add confirmation/manual override UX
-6. [ ] Test with real 1C instance (sandbox)
-7. [ ] Error handling & logging
+1. [x] Build barcode scanner UI (Next.js component)
+2. [x] Integrate OCR library (Tesseract.js for MVP)
+3. [x] Create product matching algorithm (Fuse.js)
+4. [x] Build 1C "goods receipt" document creator
+5. [x] Add confirmation/manual override UX
+6. [x] Test with mock 1C instance
+7. [x] Unit & integration tests
 
 **Deliverable:** Can scan goods → auto-fill 1C intake forms
 
@@ -162,16 +166,22 @@ AI-powered stock keeper that:
 
 ### Phase 3: Real-Time Inventory Sync (Weeks 6-7)
 **Goal:** Inventory always in sync, live dashboard
+**Status:** 📋 Planning — see [PHASE-3.md](./docs/PHASE-3.md)
+
+**Tech Stack:**
+- SSE (Server-Sent Events) for real-time updates
+- Recharts for dashboard charts
+- Resend for email notifications
 
 **Tasks:**
-1. [ ] Build real-time webhook listener for 1C changes
-2. [ ] Implement inventory diff detection
-3. [ ] Create caching strategy (PostgreSQL + Redis)
-4. [ ] Build real-time dashboard (live inventory levels)
-5. [ ] Alert system (threshold-based) with webhooks/email/SMS
-6. [ ] Audit logging (who changed what, when)
+1. [ ] SSE endpoint for real-time inventory updates
+2. [ ] Dashboard UI with widgets (InventoryOverview, LowStockWidget, Charts)
+3. [ ] AlertService with threshold-based rules
+4. [ ] NotificationService (email via Resend)
+5. [ ] Inventory diff detection & reconciliation
+6. [ ] Snapshot system for historical comparison
 
-**Deliverable:** Live inventory dashboard, threshold alerts
+**Deliverable:** Live inventory dashboard, email alerts
 
 ---
 

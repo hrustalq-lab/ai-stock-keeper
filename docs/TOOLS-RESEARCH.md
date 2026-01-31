@@ -207,7 +207,34 @@ from ortools.linear_solver import pywraplp
 
 ## 6. Real-Time Sync & Message Queue
 
-### Option A: Socket.io (Real-time)
+### Option A: Server-Sent Events (SSE) ✅ ВЫБРАНО для Phase 3
+```typescript
+// Backend (Next.js Route Handler)
+export async function GET(request: Request) {
+  const stream = new ReadableStream({
+    start(controller) {
+      // Подписка на Redis pub/sub
+      redis.subscribe("inventory:updated", (message) => {
+        controller.enqueue(`data: ${message}\n\n`);
+      });
+    },
+  });
+  
+  return new Response(stream, {
+    headers: { "Content-Type": "text/event-stream" },
+  });
+}
+
+// Frontend
+const eventSource = new EventSource("/api/sse/inventory");
+eventSource.onmessage = (e) => console.log(JSON.parse(e.data));
+```
+- **Pros:** Simple, native browser support, auto-reconnect, односторонний поток
+- **Cons:** Только server → client, не bi-directional
+- **Cost:** $0
+- **Use case:** Dashboard real-time updates (read-only)
+
+### Option B: Socket.io (WebSocket)
 ```javascript
 // Frontend
 const socket = io('http://api.app.com');
@@ -216,10 +243,10 @@ socket.on('inventory:updated', (data) => console.log(data));
 // Backend
 io.emit('inventory:updated', { sku: '123', qty: 50 });
 ```
-- **Pros:** Real-time, familiar, works in browsers
-- **Cons:** Websocket overhead, doesn't persist
+- **Pros:** Real-time, bi-directional, familiar
+- **Cons:** Websocket overhead, сложнее настройка
 - **Cost:** $0
-- **Use case:** Live dashboard updates
+- **Use case:** Когда нужна двусторонняя связь
 
 ### Option B: Bull (Job Queue)
 ```javascript
@@ -351,9 +378,117 @@ await client.send(new PutObjectCommand({
 
 ---
 
-## 10. Backend Framework
+## 10. Email Notifications (Alerts)
 
-### Option A: tRPC + Next.js (Current Choice)
+### Option A: Resend ✅ ВЫБРАНО для Phase 3
+```typescript
+// npm install resend
+import { Resend } from "resend";
+
+const resend = new Resend(process.env.RESEND_API_KEY);
+
+await resend.emails.send({
+  from: "alerts@yourdomain.com",
+  to: "manager@company.com",
+  subject: "⚠️ Низкий остаток: SKU-001",
+  html: "<p>Товар 'Болт М8x30' достиг критического уровня: 5 шт</p>",
+});
+```
+- **Pros:** Современный API, отличный DX, React Email templates
+- **Cons:** Требует свой домен для production
+- **Cost:** Free tier: 100 emails/day, $20/month for 50K emails
+- **Use case:** Alert emails, отчёты
+
+### Option B: Nodemailer + SMTP
+```typescript
+// npm install nodemailer
+const transporter = nodemailer.createTransport({
+  host: "smtp.gmail.com",
+  port: 587,
+  auth: { user: "...", pass: "..." },
+});
+
+await transporter.sendMail({ from, to, subject, html });
+```
+- **Pros:** Бесплатно (с Gmail/Yandex SMTP)
+- **Cons:** Может попадать в спам, лимиты Gmail
+- **Cost:** $0
+- **Use case:** MVP, тестирование
+
+### Option C: SendGrid
+```typescript
+// npm install @sendgrid/mail
+const sgMail = require("@sendgrid/mail");
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+await sgMail.send({ to, from, subject, html });
+```
+- **Pros:** Надёжный, enterprise-ready
+- **Cons:** Дороже, сложнее API
+- **Cost:** Free tier: 100/day, $15/month for 40K
+- **Use case:** Production scale
+
+**Recommendation:** Resend для Phase 3 (современный, простой)
+
+---
+
+## 11. Dashboard Charts
+
+### Option A: Recharts ✅ ВЫБРАНО для Phase 3
+```typescript
+// npm install recharts
+import { LineChart, Line, XAxis, YAxis, Tooltip } from "recharts";
+
+const data = [
+  { date: "Mon", quantity: 100 },
+  { date: "Tue", quantity: 120 },
+  { date: "Wed", quantity: 90 },
+];
+
+<LineChart width={600} height={300} data={data}>
+  <XAxis dataKey="date" />
+  <YAxis />
+  <Tooltip />
+  <Line type="monotone" dataKey="quantity" stroke="#8884d8" />
+</LineChart>
+```
+- **Pros:** React-native, декларативный, responsive, лёгкий
+- **Cons:** Ограниченные возможности для complex charts
+- **Cost:** $0
+- **Use case:** Dashboard виджеты, stock levels
+
+### Option B: Chart.js + react-chartjs-2
+```typescript
+// npm install chart.js react-chartjs-2
+import { Line } from "react-chartjs-2";
+
+<Line data={chartData} options={options} />
+```
+- **Pros:** Гибкий, много типов графиков
+- **Cons:** Canvas-based, не React-идиоматичный
+- **Cost:** $0
+- **Use case:** Если нужны сложные графики
+
+### Option C: Tremor
+```typescript
+// npm install @tremor/react
+import { Card, AreaChart, DonutChart } from "@tremor/react";
+
+<Card>
+  <AreaChart data={data} categories={["quantity"]} />
+</Card>
+```
+- **Pros:** Красивые готовые dashboard компоненты
+- **Cons:** Тяжёлая библиотека (~100KB), opinionated
+- **Cost:** $0
+- **Use case:** Если нужен полный dashboard kit
+
+**Recommendation:** Recharts для Phase 3 (простой, лёгкий, достаточно для MVP)
+
+---
+
+## 12. Backend Framework
+
+### Option A: tRPC + Next.js (Current Choice) ✅ ВЫБРАНО
 ```typescript
 // Already set up, great for this use case
 export const appRouter = t.router({
@@ -396,17 +531,20 @@ async def get_inventory():
 
 ---
 
-## 11. 1C Integration Specifics (Waiting on Researcher)
+## 13. 1C Integration Specifics
 
-### Pending Research
-- [ ] Official 1C REST API docs
-- [ ] 1C Plugin architecture
-- [ ] Authentication methods (OAuth, API key, certificates)
-- [ ] Rate limits
-- [ ] Document types available
-- [ ] Error handling
+### Completed Research ✅
+- [x] Official 1C REST API docs — see [1C-INTEGRATION-RESEARCH.md](./1C-INTEGRATION-RESEARCH.md)
+- [x] Authentication methods (Basic Auth, Token)
+- [x] Document types (GoodsReceipt, Shipment, Transfer)
+- [x] Webhook system
+- [x] Rate limits considerations
 
-**Will be updated once researcher completes 1C deep-dive**
+### Implementation (Phase 1) ✅
+- `OneCAuth` service — token management
+- `OneCClient` service — HTTP client
+- `WebhookProcessor` — event handling
+- Mock 1C server for development
 
 ---
 
@@ -415,14 +553,16 @@ async def get_inventory():
 ### Frontend (T3 Stack - Ready)
 - Next.js 15, React 19, TypeScript
 - Tailwind CSS, tRPC
-- **Added:** Tesseract.js (OCR), Quagga.js (barcode), Socket.io
+- **Phase 2:** Tesseract.js (OCR), Quagga.js (barcode), Fuse.js (matching)
+- **Phase 3:** Recharts (charts), SSE (real-time updates)
 
 ### Backend
 - **Node.js** (tRPC + Next.js API routes, Express for scale)
 - **Database:** PostgreSQL
-- **Cache:** Redis
+- **Cache:** Redis (+ pub/sub для real-time)
 - **Queue:** Bull
-- **Python:** Prophet (forecasting microservice)
+- **Email:** Resend (Phase 3)
+- **Python:** Prophet (forecasting microservice, Phase 4)
 - **AI:** Google Vision API (scale) / Tesseract.js (MVP)
 
 ### Deployment
@@ -457,23 +597,23 @@ async def get_inventory():
 
 ## Implementation Priority
 
-### Must Have (MVP)
-1. Tesseract.js OCR
-2. Fuse.js product matching
-3. Bull job queue
-4. PostgreSQL + Redis
-5. Simple forecasting
+### Phase 1-2 (Complete) ✅
+1. ✅ Tesseract.js OCR
+2. ✅ Fuse.js product matching
+3. ✅ Quagga.js barcode recognition
+4. ✅ Bull job queue
+5. ✅ PostgreSQL + Redis
 
-### Should Have (V1)
-1. Quagga.js barcode recognition
-2. Google Vision API (better OCR)
-3. Prophet forecasting
-4. Route optimization (greedy)
-5. Socket.io real-time updates
+### Phase 3 (Current) 📋
+1. ⬜ SSE real-time updates
+2. ⬜ Recharts dashboard
+3. ⬜ Resend email alerts
+4. ⬜ Inventory snapshots & diff
 
-### Nice to Have (V2+)
-1. OSRM routing
-2. ML model training (product matching)
-3. AutoML forecasting
-4. RabbitMQ scale
-5. Kubernetes deployment
+### Phase 4+ (Future) ⬜
+1. ⬜ Prophet forecasting (Python microservice)
+2. ⬜ Google Vision API (better OCR)
+3. ⬜ Route optimization (greedy → OSRM)
+4. ⬜ ML model training (product matching)
+5. ⬜ SMS alerts (Twilio)
+6. ⬜ Mobile PWA

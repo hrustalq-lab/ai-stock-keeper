@@ -34,10 +34,46 @@ export function BarcodeScanner({
   const [isInitialized, setIsInitialized] = useState(false);
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
   const [lastScannedCode, setLastScannedCode] = useState<string | null>(null);
+  
+  // Refs для избежания race condition и stale closures в setTimeout/useCallback
+  const isInitializedRef = useRef(false);
+  const retryTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const onErrorRef = useRef(onError);
+  const onScanRef = useRef(onScan);
+  const lastScannedCodeRef = useRef(lastScannedCode);
+  
+  // Ref для текущего зарегистрированного handler (гарантирует корректную отмену регистрации)
+  const handleDetectedRef = useRef<((result: QuaggaJSResultObject) => void) | null>(null);
+  
+  // Ref для отслеживания активности сканера (предотвращает race condition при асинхронной инициализации)
+  const isActiveRef = useRef(isActive);
+  isActiveRef.current = isActive;
+  
+  // Синхронизируем refs с актуальными значениями (избегаем stale closures в event handlers)
+  onErrorRef.current = onError;
+  onScanRef.current = onScan;
+  lastScannedCodeRef.current = lastScannedCode;
 
   // Инициализация Quagga
   const initScanner = useCallback(async () => {
-    if (!scannerRef.current || isInitialized) return;
+    // Проверяем ref для актуального состояния (не closure)
+    if (!scannerRef.current || isInitializedRef.current) return;
+    
+    // Проверяем что сканер всё ещё должен быть активен (race condition prevention)
+    if (!isActiveRef.current) return;
+
+    // Ждём пока элемент получит размеры (важно для SSR)
+    const target = scannerRef.current;
+    const rect = target.getBoundingClientRect();
+    if (rect.width === 0 || rect.height === 0) {
+      // Очищаем предыдущий таймаут если есть
+      if (retryTimeoutRef.current) {
+        clearTimeout(retryTimeoutRef.current);
+      }
+      // Повторяем попытку через 100ms
+      retryTimeoutRef.current = setTimeout(() => void initScanner(), 100);
+      return;
+    }
 
     try {
       // Проверяем доступ к камере
@@ -45,13 +81,17 @@ export function BarcodeScanner({
         video: { facingMode: "environment" },
       });
       stream.getTracks().forEach((track) => track.stop());
+      
+      // Повторная проверка после async операции (race condition prevention)
+      if (!isActiveRef.current) return;
+      
       setHasPermission(true);
 
       await Quagga.init(
         {
           inputStream: {
             type: "LiveStream",
-            target: scannerRef.current,
+            target: target,
             constraints: {
               facingMode: "environment", // Задняя камера
               width: { min: 640, ideal: 1280, max: 1920 },
@@ -66,7 +106,7 @@ export function BarcodeScanner({
               "upc_reader",
             ],
           },
-          locate: true, // Автоматический поиск штрих-кода
+          locate: true, // Автоматический поиск штрих-кода в кадре
           locator: {
             patchSize: "medium",
             halfSample: true,
@@ -75,58 +115,107 @@ export function BarcodeScanner({
         (err) => {
           if (err) {
             console.error("[BarcodeScanner] Ошибка инициализации:", err);
-            onError?.("Не удалось запустить камеру");
+            onErrorRef.current?.("Не удалось запустить камеру");
             return;
           }
+          
+          // Финальная проверка перед стартом (race condition prevention)
+          if (!isActiveRef.current) {
+            void Quagga.stop();
+            return;
+          }
+          
           Quagga.start();
+          isInitializedRef.current = true;
           setIsInitialized(true);
         }
       );
     } catch (err) {
       console.error("[BarcodeScanner] Нет доступа к камере:", err);
       setHasPermission(false);
-      onError?.("Нет доступа к камере. Разрешите доступ в настройках браузера.");
+      onErrorRef.current?.("Нет доступа к камере. Разрешите доступ в настройках браузера.");
     }
-  }, [isInitialized, onError]);
+  }, []); // Зависимости пусты — используем refs для избежания stale closure при setTimeout retry
 
   // Остановка Quagga
   const stopScanner = useCallback(() => {
-    if (isInitialized) {
+    // Очищаем retry-таймаут
+    if (retryTimeoutRef.current) {
+      clearTimeout(retryTimeoutRef.current);
+      retryTimeoutRef.current = null;
+    }
+    
+    // Принудительно отменяем handler (дополнительная защита от накопления handlers)
+    if (handleDetectedRef.current) {
+      Quagga.offDetected(handleDetectedRef.current);
+      handleDetectedRef.current = null;
+    }
+    
+    if (isInitializedRef.current) {
       void Quagga.stop();
+      isInitializedRef.current = false;
       setIsInitialized(false);
     }
-  }, [isInitialized]);
+  }, []); // Зависимости не нужны — используем ref
 
   // Обработчик обнаружения штрих-кода
+  // ВАЖНО: Всегда сначала отменяем предыдущий handler перед регистрацией нового
+  // Это предотвращает накопление stale handlers при:
+  // 1. React StrictMode (effects вызываются дважды в dev)
+  // 2. Быстром toggle isActive (race conditions)
+  // 3. Любых других сценариях где cleanup мог не сработать
   useEffect(() => {
+    // Всегда сначала отменяем предыдущий handler если он есть
+    // Это критично для предотвращения дублирования callbacks
+    if (handleDetectedRef.current) {
+      Quagga.offDetected(handleDetectedRef.current);
+      handleDetectedRef.current = null;
+    }
+
+    // Ранний выход: не регистрируем handler если сканер не инициализирован
+    if (!isInitialized) {
+      // Возвращаем cleanup для консистентности (хотя handler не был зарегистрирован)
+      return () => {
+        if (handleDetectedRef.current) {
+          Quagga.offDetected(handleDetectedRef.current);
+          handleDetectedRef.current = null;
+        }
+      };
+    }
+
     const handleDetected = (result: QuaggaJSResultObject) => {
       const code = result.codeResult?.code;
       const format = result.codeResult?.format;
 
       if (!code || !format) return;
 
-      // Дебаунс — не сканировать один и тот же код несколько раз подряд
-      if (code === lastScannedCode) return;
+      // Дебаунс — не сканировать один и тот же код несколько раз подряд (используем ref для актуального значения)
+      if (code === lastScannedCodeRef.current) return;
 
       setLastScannedCode(code);
 
       // Воспроизводим звук успешного сканирования (опционально)
       // new Audio('/beep.mp3').play().catch(() => {});
 
-      onScan({ code, format });
+      // Используем ref для актуального callback
+      onScanRef.current({ code, format });
 
       // Сбрасываем через 2 секунды для повторного сканирования
       setTimeout(() => setLastScannedCode(null), 2000);
     };
 
-    if (isInitialized) {
-      Quagga.onDetected(handleDetected);
-    }
+    // Сохраняем ссылку на handler для корректной отмены регистрации
+    handleDetectedRef.current = handleDetected;
+    Quagga.onDetected(handleDetected);
 
     return () => {
-      Quagga.offDetected(handleDetected);
+      // Используем ref для гарантированного удаления правильного handler
+      if (handleDetectedRef.current) {
+        Quagga.offDetected(handleDetectedRef.current);
+        handleDetectedRef.current = null;
+      }
     };
-  }, [isInitialized, lastScannedCode, onScan]);
+  }, [isInitialized]);
 
   // Управление жизненным циклом
   useEffect(() => {

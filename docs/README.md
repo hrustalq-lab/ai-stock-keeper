@@ -8,8 +8,10 @@
 | **Developer (Phase 1)** | [PHASE-1-COMPLETE.md](./PHASE-1-COMPLETE.md) | PHASE-2.md |
 | **Developer (Phase 2)** | [PHASE-2.md](./PHASE-2.md) | TOOLS-RESEARCH.md (OCR section) |
 | **Developer (Phase 3)** | [PHASE-3.md](./PHASE-3.md) | TOOLS-RESEARCH.md (Alerts section) |
+| **Developer (Phase 4)** | [PHASE-4.md](./PHASE-4.md) | TOOLS-RESEARCH.md (Forecasting section) |
 | **QA / Testing** | [INTEGRATION-TESTING-PLAN.md](./INTEGRATION-TESTING-PLAN.md) | PHASE-1.md |
 | **DevOps / Infra** | [TOOLS-RESEARCH.md](./TOOLS-RESEARCH.md) | INTEGRATION-TESTING-PLAN.md (CI/CD section) |
+| **ML Engineer** | [PHASE-4.md](./PHASE-4.md) | TOOLS-RESEARCH.md (Prophet section) |
 | **1C Integrator** | [1C-INTEGRATION-RESEARCH.md](./1C-INTEGRATION-RESEARCH.md) | PHASE-1.md (sections 1.5-1.6) |
 
 ---
@@ -57,7 +59,14 @@
    - Inventory diff & reconciliation
    - Таймлайн: 2 недели
 
-8. **[INTEGRATION-TESTING-PLAN.md](./INTEGRATION-TESTING-PLAN.md)** — Test strategy & framework
+8. **[PHASE-4.md](./PHASE-4.md)** — Phase 4: Predictive Analytics 📋
+   - Forecasting (SMA, EMA, Prophet)
+   - Reorder recommendations
+   - Days-to-stockout calculations
+   - Prophet Python microservice
+   - Таймлайн: 3 недели
+
+9. **[INTEGRATION-TESTING-PLAN.md](./INTEGRATION-TESTING-PLAN.md)** — Test strategy & framework
    - **Decision:** Keep tRPC + Next.js (no separate Express/NestJS needed for MVP)
    - Test pyramid: 60% unit, 30% integration, 10% E2E
    - Jest setup + example tests for 1C, webhooks, database
@@ -72,16 +81,22 @@ Frontend (T3 Stack)
 ├── Tailwind CSS
 ├── tRPC (type-safe API)
 ├── Tesseract.js (OCR), Quagga.js (barcode)
-├── Recharts (dashboard charts)
+├── Recharts (dashboard charts, forecast visualization)
 └── SSE (real-time updates)
 
 Backend
-├── PostgreSQL (inventory, transactions, alerts)
+├── PostgreSQL (inventory, transactions, alerts, forecasts)
 ├── Redis (cache, real-time pub/sub)
 ├── Bull (async 1C sync queue)
 ├── Resend (email notifications)
-├── Prophet (forecasting microservice) [Phase 4]
+├── Prophet (forecasting microservice) [Phase 4] ← Current
 └── Google Vision API (production OCR) [Future]
+
+Forecasting (Phase 4)
+├── ConsumptionService (data aggregation)
+├── ForecastService (SMA, EMA algorithms)
+├── ReorderService (recommendations)
+└── Prophet Python Microservice (advanced forecasting)
 
 Integration
 └── 1C ERP (REST API, webhooks)
@@ -94,25 +109,27 @@ Integration
 | Core architecture (1C integration) | Week 1-2 | ✅ Complete |
 | Goods intake with AI recognition | Week 3-5 | ✅ Complete |
 | Real-time inventory sync | Week 6-7 | ✅ Complete |
-| Predictive stock alerts | Week 8-10 | ⬜ Pending |
+| Predictive stock alerts | Week 8-10 | 📋 Planning |
 | Intelligent picking optimization | Week 11-13 | ⬜ Pending |
 | Multi-warehouse management | Week 14-15 | ⬜ Pending |
 | Mobile app | Week 16-18 | ⬜ Pending |
 
 ## Current Phase
 
-**Phase 3: Real-Time Dashboard** — ✅ Завершён [PHASE-3.md](./PHASE-3.md)
+**Phase 4: Predictive Analytics** — 📋 Планирование [PHASE-4.md](./PHASE-4.md)
 
 | Блок | Описание | Статус |
 |------|----------|--------|
-| Блок 1 | SSE Infrastructure | ✅ |
-| Блок 2 | Dashboard UI (Recharts) | ✅ |
-| Блок 3 | Alert System (Resend) | ✅ |
-| Блок 4 | Inventory Diff | 🟡 Базовый |
-| Блок 5 | Backend API | ✅ |
-| Блок 6 | Тестирование | ⬜ |
+| Блок 1 | Data Aggregation (ConsumptionService) | ⬜ |
+| Блок 2 | MVP Forecasting (SMA/EMA) | ⬜ |
+| Блок 3 | Reorder Recommendations | ⬜ |
+| Блок 4 | Forecast UI | ⬜ |
+| Блок 5 | Prophet Microservice | ⬜ |
+| Блок 6 | Proactive Alerts | ⬜ |
+| Блок 7 | Backend API | ⬜ |
+| Блок 8 | Тестирование | ⬜ |
 
-**Следующий:** Phase 4 — Predictive Analytics
+**Следующий:** Phase 5 — Picking Optimization
 
 ## File Structure
 
@@ -126,5 +143,6 @@ docs/
 ├── PHASE-1-COMPLETE.md          # Phase 1 — завершён ✅
 ├── PHASE-2.md                   # Phase 2 — завершён ✅
 ├── PHASE-3.md                   # Phase 3 — завершён ✅
+├── PHASE-4.md                   # Phase 4 — планирование 📋
 └── INTEGRATION-TESTING-PLAN.md  # Стратегия тестирования
 ```

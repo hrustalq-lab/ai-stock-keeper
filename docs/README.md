@@ -1,5 +1,16 @@
 # AI Stock Keeper Documentation
 
+## Navigation by Role
+
+| Role | Start Here |
+|------|-----------|
+| **Project Manager** | [AI-STOCK-KEEPER-PLAN.md](./AI-STOCK-KEEPER-PLAN.md) |
+| **Developer (Phase 1)** | [PHASE-1.md](./PHASE-1.md) |
+| **DevOps / Infra** | [TOOLS-RESEARCH.md](./TOOLS-RESEARCH.md) (Infrastructure section) |
+| **1C Integrator** | [1C-INTEGRATION-RESEARCH.md](./1C-INTEGRATION-RESEARCH.md) |
+
+---
+
 ## Quick Start
 
 1. **[AI-STOCK-KEEPER-PLAN.md](./AI-STOCK-KEEPER-PLAN.md)** — Full implementation roadmap
@@ -11,6 +22,18 @@
    - 11 tool categories evaluated (OCR, barcode, forecasting, etc.)
    - Cost breakdown: $45/month (MVP) → $250-550/month (scale)
    - Implementation priority (must-have, should-have, nice-to-have)
+
+3. **[1C-INTEGRATION-RESEARCH.md](./1C-INTEGRATION-RESEARCH.md)** — 1C API deep dive ⚡
+   - REST API architecture & authentication methods
+   - Document types (GoodsReceipt, Shipment, Transfer, etc.)
+   - Webhook system & rate limits
+   - Community resources & real examples
+   - Risks & mitigations for Phase 1
+
+4. **[PHASE-1.md](./PHASE-1.md)** — Week-by-week implementation guide
+   - Day-by-day breakdown (10 working days)
+   - Complete code examples (PostgreSQL schema, 1C auth, webhooks)
+   - Testing checklist & success criteria
 
 ## Architecture Overview
 

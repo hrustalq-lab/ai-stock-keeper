@@ -59,11 +59,11 @@
    - Inventory diff & reconciliation
    - Таймлайн: 2 недели
 
-8. **[PHASE-4.md](./PHASE-4.md)** — Phase 4: Predictive Analytics 📋
+8. **[PHASE-4.md](./PHASE-4.md)** — Phase 4: Predictive Analytics ✅
    - Forecasting (SMA, EMA, Prophet)
    - Reorder recommendations
    - Days-to-stockout calculations
-   - Prophet Python microservice
+   - Prophet Python microservice (v2)
    - Таймлайн: 3 недели
 
 9. **[INTEGRATION-TESTING-PLAN.md](./INTEGRATION-TESTING-PLAN.md)** — Test strategy & framework
@@ -109,25 +109,25 @@ Integration
 | Core architecture (1C integration) | Week 1-2 | ✅ Complete |
 | Goods intake with AI recognition | Week 3-5 | ✅ Complete |
 | Real-time inventory sync | Week 6-7 | ✅ Complete |
-| Predictive stock alerts | Week 8-10 | 📋 Planning |
+| Predictive stock alerts | Week 8-10 | ✅ MVP Complete |
 | Intelligent picking optimization | Week 11-13 | ⬜ Pending |
 | Multi-warehouse management | Week 14-15 | ⬜ Pending |
 | Mobile app | Week 16-18 | ⬜ Pending |
 
 ## Current Phase
 
-**Phase 4: Predictive Analytics** — 📋 Планирование [PHASE-4.md](./PHASE-4.md)
+**Phase 4: Predictive Analytics** — ✅ MVP Реализован [PHASE-4.md](./PHASE-4.md)
 
 | Блок | Описание | Статус |
 |------|----------|--------|
-| Блок 1 | Data Aggregation (ConsumptionService) | ⬜ |
-| Блок 2 | MVP Forecasting (SMA/EMA) | ⬜ |
-| Блок 3 | Reorder Recommendations | ⬜ |
-| Блок 4 | Forecast UI | ⬜ |
-| Блок 5 | Prophet Microservice | ⬜ |
-| Блок 6 | Proactive Alerts | ⬜ |
-| Блок 7 | Backend API | ⬜ |
-| Блок 8 | Тестирование | ⬜ |
+| Блок 1 | Data Aggregation (ConsumptionService) | ✅ |
+| Блок 2 | MVP Forecasting (SMA/EMA) | ✅ |
+| Блок 3 | Reorder Recommendations | ✅ |
+| Блок 4 | Forecast UI | ✅ |
+| Блок 5 | Prophet Microservice | ⬜ (v2) |
+| Блок 6 | Proactive Alerts | ⏳ (частично) |
+| Блок 7 | Backend API | ✅ |
+| Блок 8 | Тестирование | ✅ (35 тестов) |
 
 **Следующий:** Phase 5 — Picking Optimization
 

@@ -2,8 +2,9 @@
 
 **Цель:** Прогнозирование запасов, рекомендации по дозаказу  
 **Срок:** 3 недели (Week 8-10)  
-**Статус:** 📋 Планирование  
-**Дата создания:** 2026-01-31
+**Статус:** ✅ MVP Реализован  
+**Дата создания:** 2026-01-31  
+**Дата завершения MVP:** 2026-01-31
 
 ---
 
@@ -104,10 +105,10 @@
 
 | ID | Задача | Файл | Статус |
 |----|--------|------|--------|
-| 1.1 | ConsumptionService | `src/server/services/consumption-service.ts` | ⬜ |
-| 1.2 | Prisma: DailyConsumption model | `prisma/schema.prisma` | ⬜ |
-| 1.3 | Consumption aggregation job | `scripts/aggregate-consumption.ts` | ⬜ |
-| 1.4 | tRPC: getConsumptionHistory | `src/server/api/routers/forecast.ts` | ⬜ |
+| 1.1 | ConsumptionService | `src/server/services/consumption-service.ts` | ✅ |
+| 1.2 | Prisma: DailyConsumption model | `prisma/schema.prisma` | ✅ |
+| 1.3 | Consumption aggregation job | `scripts/aggregate-consumption.ts` | ✅ |
+| 1.4 | tRPC: getConsumptionHistory | `src/server/api/routers/forecast.ts` | ✅ |
 | 1.5 | Unit-тесты ConsumptionService | `src/__tests__/unit/consumption.test.ts` | ⬜ |
 
 **Prisma Schema дополнения:**
@@ -183,11 +184,11 @@ model ReorderRecommendation {
 
 | ID | Задача | Файл | Статус |
 |----|--------|------|--------|
-| 2.1 | ForecastService (SMA) | `src/server/services/forecast-service.ts` | ⬜ |
-| 2.2 | EMA implementation | `src/server/services/forecast-service.ts` | ⬜ |
-| 2.3 | Seasonality detection | `src/server/services/forecast-service.ts` | ⬜ |
-| 2.4 | tRPC: getForecast | `src/server/api/routers/forecast.ts` | ⬜ |
-| 2.5 | Unit-тесты ForecastService | `src/__tests__/unit/forecast.test.ts` | ⬜ |
+| 2.1 | ForecastService (SMA) | `src/server/services/forecast-service.ts` | ✅ |
+| 2.2 | EMA implementation | `src/server/services/forecast-service.ts` | ✅ |
+| 2.3 | Seasonality detection | `src/server/services/forecast-service.ts` | ✅ |
+| 2.4 | tRPC: getForecast | `src/server/api/routers/forecast.ts` | ✅ |
+| 2.5 | Unit-тесты ForecastService | `src/__tests__/unit/forecast.test.ts` | ✅ |
 
 **ForecastService API:**
 
@@ -254,6 +255,9 @@ export class ForecastService {
 ```typescript
 // Simple Moving Average
 function simpleMovingAverage(data: number[], window: number): number {
+  // Защита от пустого массива
+  if (data.length === 0) return 0;
+  
   if (data.length < window) return data.reduce((a, b) => a + b, 0) / data.length;
   const slice = data.slice(-window);
   return slice.reduce((a, b) => a + b, 0) / slice.length;
@@ -261,10 +265,13 @@ function simpleMovingAverage(data: number[], window: number): number {
 
 // Exponential Moving Average
 function exponentialMovingAverage(data: number[], smoothing = 0.3): number {
+  // Защита от пустого массива
+  if (data.length === 0) return 0;
+  
   return data.reduce((ema, value, index) => {
     if (index === 0) return value;
     return value * smoothing + ema * (1 - smoothing);
-  }, data[0]);
+  }, data[0]!);
 }
 
 // Days to stockout
@@ -305,12 +312,12 @@ function detectTrend(data: number[]): "increasing" | "stable" | "decreasing" {
 
 | ID | Задача | Файл | Статус |
 |----|--------|------|--------|
-| 3.1 | ReorderService | `src/server/services/reorder-service.ts` | ⬜ |
-| 3.2 | Lead time configuration | `src/server/services/reorder-service.ts` | ⬜ |
-| 3.3 | Safety stock calculation | `src/server/services/reorder-service.ts` | ⬜ |
-| 3.4 | tRPC: getReorderRecommendations | `src/server/api/routers/forecast.ts` | ⬜ |
-| 3.5 | Recommendation approval flow | `src/server/api/routers/forecast.ts` | ⬜ |
-| 3.6 | Unit-тесты ReorderService | `src/__tests__/unit/reorder.test.ts` | ⬜ |
+| 3.1 | ReorderService | `src/server/services/reorder-service.ts` | ✅ |
+| 3.2 | Lead time configuration | `src/server/services/reorder-service.ts` | ✅ |
+| 3.3 | Safety stock calculation | `src/server/services/reorder-service.ts` | ✅ |
+| 3.4 | tRPC: getReorderRecommendations | `src/server/api/routers/forecast.ts` | ✅ |
+| 3.5 | Recommendation approval flow | `src/server/api/routers/forecast.ts` | ✅ |
+| 3.6 | Unit-тесты ReorderService | `src/__tests__/unit/reorder.test.ts` | ✅ |
 
 **ReorderService API:**
 
@@ -399,14 +406,14 @@ export class ReorderService {
 
 | ID | Задача | Файл | Статус |
 |----|--------|------|--------|
-| 4.1 | Forecast Page | `src/app/forecast/page.tsx` | ⬜ |
-| 4.2 | ForecastChart component | `src/app/_components/forecast/ForecastChart.tsx` | ⬜ |
-| 4.3 | ReorderTable component | `src/app/_components/forecast/ReorderTable.tsx` | ⬜ |
-| 4.4 | ProductForecastCard | `src/app/_components/forecast/ProductForecastCard.tsx` | ⬜ |
-| 4.5 | TrendIndicator | `src/app/_components/forecast/TrendIndicator.tsx` | ⬜ |
+| 4.1 | Forecast Page | `src/app/forecast/page.tsx` | ✅ |
+| 4.2 | ForecastChart component | `src/app/_components/forecast/ForecastChart.tsx` | ✅ |
+| 4.3 | ReorderTable component | `src/app/_components/forecast/ReorderTable.tsx` | ✅ |
+| 4.4 | ProductForecastCard | `src/app/_components/forecast/ProductForecastCard.tsx` | ✅ |
+| 4.5 | TrendIndicator | `src/app/_components/forecast/TrendIndicator.tsx` | ✅ |
 | 4.6 | ForecastSettings | `src/app/settings/forecast/page.tsx` | ⬜ |
-| 4.7 | Dashboard integration | `src/app/_components/dashboard/ForecastWidget.tsx` | ⬜ |
-| 4.8 | Index exports | `src/app/_components/forecast/index.ts` | ⬜ |
+| 4.7 | Dashboard integration | `src/app/_components/dashboard/ForecastWidget.tsx` | ✅ |
+| 4.8 | Index exports | `src/app/_components/forecast/index.ts` | ✅ |
 
 **Forecast Page Layout:**
 
@@ -693,7 +700,7 @@ export async function getProphetForecast(input: ProphetForecastInput) {
 |----|--------|------|--------|
 | 6.1 | Forecast-based alerts | `src/server/services/alert-service.ts` | ⬜ |
 | 6.2 | Daily reorder digest email | `src/server/services/notification-service.ts` | ⬜ |
-| 6.3 | Scheduled forecast job | `scripts/forecast-worker.ts` | ⬜ |
+| 6.3 | Scheduled forecast job | `scripts/forecast-worker.ts` | ✅ |
 | 6.4 | Alert rule: "days_to_stockout" | Extend AlertRule model | ⬜ |
 
 **Новый тип алерта:**
@@ -741,12 +748,12 @@ model AlertRule {
 
 | ID | Endpoint | Описание | Статус |
 |----|----------|----------|--------|
-| 7.1 | `forecast.getForProduct` | Прогноз для одного товара | ⬜ |
-| 7.2 | `forecast.getBatch` | Прогнозы для списка товаров | ⬜ |
-| 7.3 | `forecast.getRecommendations` | Рекомендации по дозаказу | ⬜ |
-| 7.4 | `forecast.approveRecommendation` | Подтвердить рекомендацию | ⬜ |
-| 7.5 | `forecast.getConsumptionTrend` | Тренд потребления | ⬜ |
-| 7.6 | `forecast.getAccuracy` | Точность прогнозов (MAPE) | ⬜ |
+| 7.1 | `forecast.getForProduct` | Прогноз для одного товара | ✅ |
+| 7.2 | `forecast.getBatch` | Прогнозы для списка товаров | ✅ |
+| 7.3 | `forecast.getRecommendations` | Рекомендации по дозаказу | ✅ |
+| 7.4 | `forecast.approveRecommendation` | Подтвердить рекомендацию | ✅ |
+| 7.5 | `forecast.getConsumptionTrend` | Тренд потребления | ✅ |
+| 7.6 | `forecast.getAccuracy` | Точность прогнозов (MAPE) | ✅ |
 | 7.7 | `forecast.getSettings` | Настройки прогнозирования | ⬜ |
 | 7.8 | `forecast.updateSettings` | Обновить настройки | ⬜ |
 
@@ -819,8 +826,8 @@ export const forecastRouter = createTRPCRouter({
 
 | ID | Задача | Тип | Статус |
 |----|--------|-----|--------|
-| 8.1 | Unit-тесты ForecastService | Jest | ⬜ |
-| 8.2 | Unit-тесты ReorderService | Jest | ⬜ |
+| 8.1 | Unit-тесты ForecastService | Jest | ✅ (22 тестов) |
+| 8.2 | Unit-тесты ReorderService | Jest | ✅ (13 тестов) |
 | 8.3 | Unit-тесты ConsumptionService | Jest | ⬜ |
 | 8.4 | Integration тест forecast flow | Jest | ⬜ |
 | 8.5 | Prophet microservice tests | pytest | ⬜ |

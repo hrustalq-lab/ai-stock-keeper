@@ -164,3 +164,66 @@ model InventorySnapshot {
   @@index([createdAt])
   @@map("inventory_snapshots")
 }
+
+// ============================================
+// Phase 4: Дневное потребление (агрегация)
+// ============================================
+model DailyConsumption {
+  id        Int      @id @default(autoincrement())
+  sku       String   @db.VarChar(50)
+  warehouse String   @db.VarChar(50)
+  date      DateTime @db.Date
+  consumed  Int      // Количество отгруженного/потреблённого
+  received  Int      @default(0) // Количество поступившего
+  netChange Int      @map("net_change") // consumed - received
+  avgPrice  Decimal? @map("avg_price") @db.Decimal(10, 2)
+
+  @@unique([sku, warehouse, date])
+  @@index([sku])
+  @@index([warehouse])
+  @@index([date])
+  @@map("daily_consumption")
+}
+
+// ============================================
+// Phase 4: Прогнозы
+// ============================================
+model Forecast {
+  id             Int      @id @default(autoincrement())
+  sku            String   @db.VarChar(50)
+  warehouse      String   @db.VarChar(50)
+  forecastDate   DateTime @map("forecast_date") @db.Date
+  predictedQty   Int      @map("predicted_qty")
+  confidenceLow  Int?     @map("confidence_low")
+  confidenceHigh Int?     @map("confidence_high")
+  model          String   @db.VarChar(20) // "sma", "ema", "prophet"
+  mape           Decimal? @db.Decimal(5, 2) // Model accuracy
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  @@unique([sku, warehouse, forecastDate, model])
+  @@index([sku])
+  @@index([forecastDate])
+  @@map("forecasts")
+}
+
+// ============================================
+// Phase 4: Рекомендации по дозаказу
+// ============================================
+model ReorderRecommendation {
+  id             Int       @id @default(autoincrement())
+  sku            String    @db.VarChar(50)
+  warehouse      String    @db.VarChar(50)
+  currentQty     Int       @map("current_qty")
+  reorderPoint   Int       @map("reorder_point")
+  recommendedQty Int       @map("recommended_qty")
+  daysToStockout Int       @map("days_to_stockout")
+  urgency        String    @db.VarChar(20) // "critical", "warning", "normal"
+  status         String    @default("pending") @db.VarChar(20) // "pending", "approved", "ordered"
+  expiresAt      DateTime  @map("expires_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
+
+  @@index([sku])
+  @@index([urgency])
+  @@index([status])
+  @@map("reorder_recommendations")
+}

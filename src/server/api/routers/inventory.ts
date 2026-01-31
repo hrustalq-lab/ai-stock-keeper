@@ -247,6 +247,17 @@ export const inventoryRouter = createTRPCRouter({
     }),
 
   /**
+   * Получить список складов
+   */
+  getWarehouses: publicProcedure.query(async () => {
+    const result = await db.inventory.findMany({
+      select: { warehouse: true },
+      distinct: ["warehouse"],
+    });
+    return result.map((r) => r.warehouse);
+  }),
+
+  /**
    * Получить статус синхронизации
    */
   getSyncStatus: publicProcedure.query(async () => {

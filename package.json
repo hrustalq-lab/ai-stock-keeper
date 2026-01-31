@@ -26,6 +26,8 @@
     "mock:1c": "tsx mock-1c/server.ts",
     "sync:initial": "tsx scripts/sync-initial.ts",
     "worker": "tsx scripts/worker.ts",
+    "aggregate": "tsx scripts/aggregate-consumption.ts",
+    "forecast": "tsx scripts/forecast-worker.ts",
     "docker:up": "docker-compose up -d",
     "docker:down": "docker-compose down"
   },

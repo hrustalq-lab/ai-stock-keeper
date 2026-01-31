@@ -32,6 +32,13 @@ export const env = createEnv({
     
     // Alert defaults
     ALERT_DEFAULT_COOLDOWN_MINS: z.coerce.number().default(60),
+    
+    // Phase 4: Forecast
+    PROPHET_SERVICE_URL: z.string().url().optional(),
+    FORECAST_DEFAULT_HISTORY_DAYS: z.coerce.number().default(60),
+    FORECAST_DEFAULT_PERIODS: z.coerce.number().default(14),
+    REORDER_DEFAULT_LEAD_TIME_DAYS: z.coerce.number().default(7),
+    REORDER_DEFAULT_SERVICE_LEVEL: z.coerce.number().default(0.95),
   },
 
   /**
@@ -57,6 +64,11 @@ export const env = createEnv({
     RESEND_API_KEY: process.env.RESEND_API_KEY,
     RESEND_FROM_EMAIL: process.env.RESEND_FROM_EMAIL,
     ALERT_DEFAULT_COOLDOWN_MINS: process.env.ALERT_DEFAULT_COOLDOWN_MINS,
+    PROPHET_SERVICE_URL: process.env.PROPHET_SERVICE_URL,
+    FORECAST_DEFAULT_HISTORY_DAYS: process.env.FORECAST_DEFAULT_HISTORY_DAYS,
+    FORECAST_DEFAULT_PERIODS: process.env.FORECAST_DEFAULT_PERIODS,
+    REORDER_DEFAULT_LEAD_TIME_DAYS: process.env.REORDER_DEFAULT_LEAD_TIME_DAYS,
+    REORDER_DEFAULT_SERVICE_LEVEL: process.env.REORDER_DEFAULT_SERVICE_LEVEL,
   },
 
   /**

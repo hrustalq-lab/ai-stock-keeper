@@ -1,5 +1,5 @@
 /**
- * Dashboard компоненты (Phase 3)
+ * Dashboard компоненты (Phase 3-4)
  */
 
 export { InventoryOverview } from "./InventoryOverview";
@@ -9,3 +9,4 @@ export { StockLevelChart } from "./StockLevelChart";
 export { AlertsWidget } from "./AlertsWidget";
 export { WarehouseSelector } from "./WarehouseSelector";
 export { ConnectionStatus } from "./ConnectionStatus";
+export { ForecastWidget } from "./ForecastWidget";

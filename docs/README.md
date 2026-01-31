@@ -2,12 +2,13 @@
 
 ## Navigation by Role
 
-| Role | Start Here |
-|------|-----------|
-| **Project Manager** | [AI-STOCK-KEEPER-PLAN.md](./AI-STOCK-KEEPER-PLAN.md) |
-| **Developer (Phase 1)** | [PHASE-1.md](./PHASE-1.md) |
-| **DevOps / Infra** | [TOOLS-RESEARCH.md](./TOOLS-RESEARCH.md) (Infrastructure section) |
-| **1C Integrator** | [1C-INTEGRATION-RESEARCH.md](./1C-INTEGRATION-RESEARCH.md) |
+| Role | Start Here | Then Read |
+|------|-----------|-----------|
+| **Project Manager** | [AI-STOCK-KEEPER-PLAN.md](./AI-STOCK-KEEPER-PLAN.md) | TOOLS-RESEARCH.md |
+| **Developer (Phase 1)** | [PHASE-1.md](./PHASE-1.md) | INTEGRATION-TESTING-PLAN.md |
+| **QA / Testing** | [INTEGRATION-TESTING-PLAN.md](./INTEGRATION-TESTING-PLAN.md) | PHASE-1.md |
+| **DevOps / Infra** | [TOOLS-RESEARCH.md](./TOOLS-RESEARCH.md) | INTEGRATION-TESTING-PLAN.md (CI/CD section) |
+| **1C Integrator** | [1C-INTEGRATION-RESEARCH.md](./1C-INTEGRATION-RESEARCH.md) | PHASE-1.md (sections 1.5-1.6) |
 
 ---
 
@@ -34,6 +35,14 @@
    - Day-by-day breakdown (10 working days)
    - Complete code examples (PostgreSQL schema, 1C auth, webhooks)
    - Testing checklist & success criteria
+
+5. **[INTEGRATION-TESTING-PLAN.md](./INTEGRATION-TESTING-PLAN.md)** — Test strategy & framework ✅
+   - **Decision:** Keep tRPC + Next.js (no separate Express/NestJS needed for MVP)
+   - Test pyramid: 60% unit, 30% integration, 10% E2E
+   - Jest setup + example tests for 1C, webhooks, database
+   - Mock vs real sandbox strategies
+   - CI/CD (GitHub Actions) setup
+   - When to consider Express/NestJS (>10K req/sec, microservices)
 
 ## Architecture Overview
 

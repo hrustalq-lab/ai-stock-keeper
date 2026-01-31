@@ -3,38 +3,55 @@ import { z } from "zod";
 
 export const env = createEnv({
   /**
-   * Specify your server-side environment variables schema here. This way you can ensure the app
-   * isn't built with invalid env vars.
+   * Серверные переменные окружения
    */
   server: {
     NODE_ENV: z.enum(["development", "test", "production"]),
+    
+    // База данных
+    DATABASE_URL: z.string().url(),
+    
+    // Redis
+    REDIS_URL: z.string().url(),
+    
+    // 1C Configuration
+    ONE_C_BASE_URL: z.string().url(),
+    ONE_C_USERNAME: z.string().min(1),
+    ONE_C_PASSWORD: z.string().min(1),
+    ONE_C_WAREHOUSE_ID: z.string().min(1),
+    
+    // Bull Queue
+    BULL_QUEUE_NAME: z.string().default("1c-sync-queue"),
   },
 
   /**
-   * Specify your client-side environment variables schema here. This way you can ensure the app
-   * isn't built with invalid env vars. To expose them to the client, prefix them with
-   * `NEXT_PUBLIC_`.
+   * Клиентские переменные окружения (префикс NEXT_PUBLIC_)
    */
   client: {
     // NEXT_PUBLIC_CLIENTVAR: z.string(),
   },
 
   /**
-   * You can't destruct `process.env` as a regular object in the Next.js edge runtimes (e.g.
-   * middlewares) or client-side so we need to destruct manually.
+   * Runtime переменные
    */
   runtimeEnv: {
     NODE_ENV: process.env.NODE_ENV,
-    // NEXT_PUBLIC_CLIENTVAR: process.env.NEXT_PUBLIC_CLIENTVAR,
+    DATABASE_URL: process.env.DATABASE_URL,
+    REDIS_URL: process.env.REDIS_URL,
+    ONE_C_BASE_URL: process.env.ONE_C_BASE_URL,
+    ONE_C_USERNAME: process.env.ONE_C_USERNAME,
+    ONE_C_PASSWORD: process.env.ONE_C_PASSWORD,
+    ONE_C_WAREHOUSE_ID: process.env.ONE_C_WAREHOUSE_ID,
+    BULL_QUEUE_NAME: process.env.BULL_QUEUE_NAME,
   },
+
   /**
-   * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation. This is especially
-   * useful for Docker builds.
+   * Пропустить валидацию при сборке Docker
    */
   skipValidation: !!process.env.SKIP_ENV_VALIDATION,
+
   /**
-   * Makes it so that empty strings are treated as undefined. `SOME_VAR: z.string()` and
-   * `SOME_VAR=''` will throw an error.
+   * Пустые строки = undefined
    */
   emptyStringAsUndefined: true,
 });

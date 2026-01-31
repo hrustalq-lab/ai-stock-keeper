@@ -1,0 +1,103 @@
+// Prisma Schema для AI Stock Keeper
+// Документация: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ============================================
+// Инвентарь (кеш из 1C)
+// ============================================
+model Inventory {
+  id           Int       @id @default(autoincrement())
+  sku          String    @db.VarChar(50)
+  name         String    @db.VarChar(255)
+  quantity     Int       @default(0)
+  warehouse    String    @db.VarChar(50)
+  reorderPoint Int       @default(10) @map("reorder_point")
+  supplier     String?   @db.VarChar(100)
+  syncedAt     DateTime  @default(now()) @map("synced_at")
+  last1CUpdate DateTime? @map("last_1c_update")
+
+  // Уникальный индекс: SKU + склад
+  @@unique([sku, warehouse])
+  @@index([sku])
+  @@index([warehouse])
+  @@map("inventory")
+}
+
+// ============================================
+// Транзакции (локальные, до синхронизации с 1C)
+// ============================================
+model Transaction {
+  id            Int       @id @default(autoincrement())
+  type          String    @db.VarChar(20) // intake, picking, transfer, adjustment
+  sku           String    @db.VarChar(50)
+  quantity      Int
+  fromWarehouse String?   @map("from_warehouse") @db.VarChar(50)
+  toWarehouse   String?   @map("to_warehouse") @db.VarChar(50)
+  documentId    String?   @map("document_id") @db.VarChar(100) // Ссылка на документ 1C
+  syncedWith1C  Boolean   @default(false) @map("synced_with_1c")
+  syncedAt      DateTime? @map("synced_at")
+  createdAt     DateTime  @default(now()) @map("created_at")
+
+  @@index([sku])
+  @@index([syncedWith1C])
+  @@map("transactions")
+}
+
+// ============================================
+// Документы 1C
+// ============================================
+model Document1C {
+  id            Int       @id @default(autoincrement())
+  type          String    @db.VarChar(50) // GoodsReceipt, Shipment, Transfer
+  docNumber     String    @map("doc_number") @db.VarChar(50)
+  docDate       DateTime? @map("doc_date")
+  warehouse     String?   @db.VarChar(50)
+  status        String?   @db.VarChar(20) // draft, posted, processed
+  syncAttempt   Int       @default(0) @map("sync_attempt")
+  lastSyncError String?   @map("last_sync_error")
+  syncedAt      DateTime? @map("synced_at")
+  createdAt     DateTime  @default(now()) @map("created_at")
+
+  @@index([docNumber])
+  @@map("documents_1c")
+}
+
+// ============================================
+// Аудит лог
+// ============================================
+model AuditLog {
+  id        Int      @id @default(autoincrement())
+  action    String   @db.VarChar(100)
+  tableName String?  @map("table_name") @db.VarChar(50)
+  recordId  String?  @map("record_id") @db.VarChar(100)
+  oldValue  Json?    @map("old_value")
+  newValue  Json?    @map("new_value")
+  userId    String?  @map("user_id") @db.VarChar(100)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("audit_log")
+}
+
+// ============================================
+// Очередь синхронизации (для Bull)
+// ============================================
+model SyncQueue {
+  id           Int       @id @default(autoincrement())
+  jobType      String    @map("job_type") @db.VarChar(50)
+  payload      Json
+  status       String    @default("pending") @db.VarChar(20) // pending, processing, completed, failed
+  retryCount   Int       @default(0) @map("retry_count")
+  errorMessage String?   @map("error_message")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  processedAt  DateTime? @map("processed_at")
+
+  @@index([status])
+  @@map("sync_queue")
+}

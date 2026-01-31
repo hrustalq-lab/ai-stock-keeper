@@ -2,7 +2,7 @@
 
 **Цель:** MVP — приёмка товаров с AI-распознаванием  
 **Срок:** 2-3 недели  
-**Статус:** 📋 Планирование  
+**Статус:** 🚧 В процессе (Блоки 1-3 готовы)  
 **Начало:** После завершения Phase 1
 
 ---
@@ -73,15 +73,15 @@
 
 ## 3. Задачи
 
-### 3.1 Блок 1: Библиотеки и сервисы (Day 1-2)
+### 3.1 Блок 1: Библиотеки и сервисы (Day 1-2) ✅
 
 | ID | Задача | Файл | Статус |
 |----|--------|------|--------|
-| 1.1 | Установить зависимости | `package.json` | ⬜ |
-| 1.2 | Создать BarcodeService | `src/server/services/barcode.ts` | ⬜ |
-| 1.3 | Создать OCRService | `src/server/services/ocr.ts` | ⬜ |
-| 1.4 | Создать ProductMatcherService | `src/server/services/product-matcher.ts` | ⬜ |
-| 1.5 | Unit-тесты для сервисов | `src/__tests__/unit/` | ⬜ |
+| 1.1 | Установить зависимости | `package.json` | ✅ |
+| 1.2 | Создать BarcodeService | `src/server/services/barcode.ts` | ✅ |
+| 1.3 | Создать OCRService | `src/server/services/ocr.ts` | ✅ |
+| 1.4 | Создать ProductMatcherService | `src/server/services/product-matcher.ts` | ✅ |
+| 1.5 | Unit-тесты для сервисов | `src/__tests__/unit/` | ✅ |
 
 **Зависимости для установки:**
 ```bash
@@ -91,27 +91,28 @@ npm install --save-dev @types/quagga
 
 ---
 
-### 3.2 Блок 2: UI Компоненты (Day 3-5)
+### 3.2 Блок 2: UI Компоненты (Day 3-5) ✅
 
 | ID | Задача | Файл | Статус |
 |----|--------|------|--------|
-| 2.1 | BarcodeScanner компонент | `src/app/_components/intake/BarcodeScanner.tsx` | ⬜ |
-| 2.2 | ImageUploader компонент | `src/app/_components/intake/ImageUploader.tsx` | ⬜ |
-| 2.3 | ProductSuggestions компонент | `src/app/_components/intake/ProductSuggestions.tsx` | ⬜ |
-| 2.4 | IntakeForm компонент | `src/app/_components/intake/IntakeForm.tsx` | ⬜ |
-| 2.5 | IntakeConfirmation компонент | `src/app/_components/intake/IntakeConfirmation.tsx` | ⬜ |
+| 2.1 | BarcodeScanner компонент | `src/app/_components/intake/BarcodeScanner.tsx` | ✅ |
+| 2.2 | ImageUploader компонент | `src/app/_components/intake/ImageUploader.tsx` | ✅ |
+| 2.3 | ProductSuggestions компонент | `src/app/_components/intake/ProductSuggestions.tsx` | ✅ |
+| 2.4 | IntakeForm компонент | `src/app/_components/intake/IntakeForm.tsx` | ✅ |
+| 2.5 | IntakeConfirmation компонент | `src/app/_components/intake/IntakeConfirmation.tsx` | ✅ |
 
 ---
 
-### 3.3 Блок 3: Backend API (Day 6-7)
+### 3.3 Блок 3: Backend API (Day 6-7) ✅
 
 | ID | Задача | Endpoint | Статус |
 |----|--------|----------|--------|
-| 3.1 | Распознать штрих-код | `intake.recognizeBarcode` | ⬜ |
-| 3.2 | Распознать текст (OCR) | `intake.recognizeOCR` | ⬜ |
-| 3.3 | Найти товар по тексту | `intake.matchProduct` | ⬜ |
-| 3.4 | Создать приходную накладную | `intake.createReceipt` | ⬜ |
-| 3.5 | Получить историю приёмок | `intake.getHistory` | ⬜ |
+| 3.1 | Распознать штрих-код | `intake.recognizeBarcode` | ✅ |
+| 3.2 | Распознать текст (OCR) | `intake.recognizeOCR` | ✅ |
+| 3.3 | Найти товар по тексту | `intake.matchProduct` | ✅ |
+| 3.4 | Создать приходную накладную | `intake.createReceipt` | ✅ |
+| 3.5 | Получить историю приёмок | `intake.getHistory` | ✅ |
+| 3.6 | Получить статистику | `intake.getStats` | ✅ |
 
 **tRPC Router:**
 ```typescript

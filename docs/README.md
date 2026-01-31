@@ -81,7 +81,7 @@ Integration
 | Use Case | Timeline | Status |
 |----------|----------|--------|
 | Core architecture (1C integration) | Week 1-2 | ✅ Complete |
-| Goods intake with AI recognition | Week 3-5 | 📋 Planning |
+| Goods intake with AI recognition | Week 3-5 | 🚧 In Progress |
 | Real-time inventory sync | Week 6-7 | ⬜ Pending |
 | Predictive stock alerts | Week 8-10 | ⬜ Pending |
 | Intelligent picking optimization | Week 11-13 | ⬜ Pending |
@@ -94,9 +94,9 @@ Integration
 
 | Блок | Описание | Статус |
 |------|----------|--------|
-| Блок 1 | Библиотеки и сервисы | ⬜ |
-| Блок 2 | UI компоненты | ⬜ |
-| Блок 3 | Backend API | ⬜ |
+| Блок 1 | Библиотеки и сервисы | ✅ |
+| Блок 2 | UI компоненты | ✅ |
+| Блок 3 | Backend API | ✅ |
 | Блок 4 | Страницы | ⬜ |
 | Блок 5 | Тестирование | ⬜ |
 

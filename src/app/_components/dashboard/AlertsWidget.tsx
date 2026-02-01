@@ -6,7 +6,10 @@
 
 import { formatDistanceToNow } from "date-fns";
 import { ru } from "date-fns/locale";
-import { api } from "~/trpc/react";
+import { api, type RouterOutputs } from "~/trpc/react";
+
+// Тип алерта из роутера
+type AlertHistoryItem = RouterOutputs["alerts"]["getHistory"][number];
 
 interface AlertsWidgetProps {
   limit?: number;
@@ -72,7 +75,7 @@ export function AlertsWidget({ limit = 5 }: AlertsWidgetProps) {
           </div>
         ) : (
           <ul className="divide-y divide-zinc-700/30">
-            {history.map((alert) => (
+            {history.map((alert: AlertHistoryItem) => (
               <li
                 key={alert.id}
                 className="flex items-start gap-3 px-4 py-3 transition-colors hover:bg-zinc-700/20"

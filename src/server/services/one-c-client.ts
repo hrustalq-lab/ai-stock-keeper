@@ -65,6 +65,39 @@ export interface CreateShipmentParams {
 }
 
 /**
+ * Phase 5: Заказ из 1C
+ */
+export interface OneC_Order {
+  orderNumber: string;
+  customerName: string;
+  warehouse: string;
+  items: Array<{
+    sku: string;
+    productName: string;
+    quantity: number;
+    price?: number;
+  }>;
+  status: "new" | "confirmed" | "in_picking" | "shipped" | "cancelled";
+  priority?: number;
+  createdAt: string;
+  deliveryDate?: string;
+}
+
+/**
+ * Phase 5: Параметры создания отгрузки из picking
+ */
+export interface CreateShipmentFromPickingParams {
+  orderNumber: string;
+  pickingListId: number;
+  items: Array<{
+    sku: string;
+    quantity: number; // Фактически отгружено
+  }>;
+  warehouse: string;
+  shippedAt?: Date;
+}
+
+/**
  * Параметры перемещения
  */
 export interface CreateTransferParams {
@@ -200,6 +233,61 @@ export class OneCClient {
       fromWarehouse: params.fromWarehouse,
       toWarehouse: params.toWarehouse,
       items: params.items,
+    });
+  }
+
+  // ============================================
+  // Phase 5: Заказы (Orders)
+  // ============================================
+
+  /**
+   * Получить заказы, готовые к сборке
+   */
+  async getOrdersForPicking(warehouse: string): Promise<OneC_Order[]> {
+    return this.get<OneC_Order[]>("/orders", {
+      warehouse,
+      status: "confirmed", // Только подтверждённые заказы
+    });
+  }
+
+  /**
+   * Получить детали заказа
+   */
+  async getOrderDetails(orderNumber: string): Promise<OneC_Order | null> {
+    try {
+      return await this.get<OneC_Order>(`/orders/${encodeURIComponent(orderNumber)}`);
+    } catch (error) {
+      if (error instanceof Error && error.message.includes("404")) {
+        return null;
+      }
+      throw error;
+    }
+  }
+
+  /**
+   * Создать документ отгрузки из picking
+   */
+  async createShipmentFromPicking(
+    params: CreateShipmentFromPickingParams
+  ): Promise<OneCDocumentResult> {
+    return this.post<OneCDocumentResult>("/documents/shipment", {
+      orderNumber: params.orderNumber,
+      pickingListId: params.pickingListId,
+      items: params.items,
+      warehouse: params.warehouse,
+      shippedAt: params.shippedAt?.toISOString() ?? new Date().toISOString(),
+    });
+  }
+
+  /**
+   * Обновить статус заказа в 1C
+   */
+  async updateOrderStatus(
+    orderNumber: string,
+    status: "in_picking" | "shipped"
+  ): Promise<void> {
+    await this.post(`/orders/${encodeURIComponent(orderNumber)}/status`, {
+      status,
     });
   }
 

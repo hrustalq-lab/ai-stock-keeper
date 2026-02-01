@@ -8,8 +8,7 @@
 import { db } from "~/server/db";
 import { env } from "~/env";
 import { consumptionService } from "./consumption-service";
-import { forecastService, daysToStockout as calcDaysToStockout } from "./forecast-service";
-import { addDays, subDays, startOfDay } from "date-fns";
+import { addDays } from "date-fns";
 
 // ============================================
 // Типы
@@ -108,7 +107,7 @@ export class ReorderService {
   calculateSafetyStock(
     stdDevConsumption: number,
     leadTimeDays: number,
-    serviceLevel: number = 0.95
+    serviceLevel = 0.95
   ): number {
     const z = getZScore(serviceLevel);
     return Math.ceil(z * stdDevConsumption * Math.sqrt(leadTimeDays));
@@ -123,8 +122,8 @@ export class ReorderService {
    */
   calculateEOQ(
     annualDemand: number,
-    orderCost: number = 500, // Стоимость размещения заказа (руб)
-    holdingCostPerUnit: number = 50 // Стоимость хранения (руб/шт/год)
+    orderCost = 500, // Стоимость размещения заказа (руб)
+    holdingCostPerUnit = 50 // Стоимость хранения (руб/шт/год)
   ): number {
     if (annualDemand <= 0 || holdingCostPerUnit <= 0) return 0;
     return Math.ceil(Math.sqrt((2 * annualDemand * orderCost) / holdingCostPerUnit));

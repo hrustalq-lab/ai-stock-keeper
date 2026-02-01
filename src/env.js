@@ -39,6 +39,12 @@ export const env = createEnv({
     FORECAST_DEFAULT_PERIODS: z.coerce.number().default(14),
     REORDER_DEFAULT_LEAD_TIME_DAYS: z.coerce.number().default(7),
     REORDER_DEFAULT_SERVICE_LEVEL: z.coerce.number().default(0.95),
+    
+    // Phase 5: Picking Optimization
+    ROUTE_OPTIMIZATION_ALGORITHM: z.enum(["nearest_neighbor", "zone_based"]).default("nearest_neighbor"),
+    WAREHOUSE_WALKING_SPEED_MPS: z.coerce.number().default(1.4),
+    WAREHOUSE_PICK_TIME_SECONDS: z.coerce.number().default(15),
+    ONE_C_AUTO_CREATE_SHIPMENT: z.enum(["true", "false"]).default("true"),
   },
 
   /**
@@ -69,6 +75,11 @@ export const env = createEnv({
     FORECAST_DEFAULT_PERIODS: process.env.FORECAST_DEFAULT_PERIODS,
     REORDER_DEFAULT_LEAD_TIME_DAYS: process.env.REORDER_DEFAULT_LEAD_TIME_DAYS,
     REORDER_DEFAULT_SERVICE_LEVEL: process.env.REORDER_DEFAULT_SERVICE_LEVEL,
+    // Phase 5
+    ROUTE_OPTIMIZATION_ALGORITHM: process.env.ROUTE_OPTIMIZATION_ALGORITHM,
+    WAREHOUSE_WALKING_SPEED_MPS: process.env.WAREHOUSE_WALKING_SPEED_MPS,
+    WAREHOUSE_PICK_TIME_SECONDS: process.env.WAREHOUSE_PICK_TIME_SECONDS,
+    ONE_C_AUTO_CREATE_SHIPMENT: process.env.ONE_C_AUTO_CREATE_SHIPMENT,
   },
 
   /**

@@ -6,7 +6,7 @@
  */
 
 import { db } from "~/server/db";
-import { subDays, startOfDay, endOfDay, format } from "date-fns";
+import { subDays, startOfDay, endOfDay } from "date-fns";
 
 // ============================================
 // Типы

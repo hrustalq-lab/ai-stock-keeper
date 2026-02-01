@@ -6,7 +6,6 @@
  */
 
 import {
-  LineChart,
   Line,
   XAxis,
   YAxis,
@@ -37,11 +36,35 @@ interface ForecastChartProps {
   showConfidence?: boolean;
 }
 
-// Кастомный тултип
-function CustomTooltip({ active, payload, label }: any) {
-  if (!active || !payload || !payload.length) return null;
+type ChartDataKey = keyof Omit<ChartDataPoint, "date">;
 
-  const dateStr = label as string;
+const dataKeyLabels: Record<ChartDataKey, string> = {
+  actual: "Фактическое",
+  forecast: "Прогноз",
+  confidenceHigh: "Верхняя граница",
+  confidenceLow: "Нижняя граница",
+};
+
+// Типы для Recharts Tooltip payload
+interface TooltipPayloadEntry {
+  value?: number | string | null;
+  dataKey?: string;
+  name?: string;
+  color?: string;
+  stroke?: string;
+}
+
+interface CustomTooltipProps {
+  active?: boolean;
+  payload?: TooltipPayloadEntry[];
+  label?: string | number;
+}
+
+// Кастомный тултип с правильной типизацией
+function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
+  if (!active || !payload?.length) return null;
+
+  const dateStr = typeof label === "string" ? label : String(label ?? "");
   const formattedDate = dateStr
     ? format(new Date(dateStr), "d MMMM", { locale: ru })
     : "";
@@ -49,23 +72,19 @@ function CustomTooltip({ active, payload, label }: any) {
   return (
     <div className="rounded-lg border border-slate-200 bg-white p-3 shadow-lg">
       <p className="mb-2 font-medium text-slate-700">{formattedDate}</p>
-      {payload.map((entry: any, index: number) => {
-        if (entry.value === undefined || entry.value === null) return null;
+      {payload.map((entry, index) => {
+        if (entry.value == null) return null;
 
-        const labels: Record<string, string> = {
-          actual: "Фактическое",
-          forecast: "Прогноз",
-          confidenceHigh: "Верхняя граница",
-          confidenceLow: "Нижняя граница",
-        };
+        const dataKey = entry.dataKey as ChartDataKey | undefined;
+        const labelText = dataKey ? (dataKeyLabels[dataKey] ?? dataKey) : entry.name;
 
         return (
           <p
             key={index}
             className="text-sm"
-            style={{ color: entry.color || entry.stroke }}
+            style={{ color: entry.color ?? entry.stroke ?? "#333" }}
           >
-            {labels[entry.dataKey] ?? entry.dataKey}: {entry.value} шт
+            {labelText}: {entry.value} шт
           </p>
         );
       })}
@@ -105,7 +124,7 @@ export function ForecastChart({
             dataKey="date"
             stroke="#64748b"
             fontSize={12}
-            tickFormatter={(value) => {
+            tickFormatter={(value: string) => {
               try {
                 return format(new Date(value), "d.MM");
               } catch {

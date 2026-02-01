@@ -227,3 +227,196 @@ model ReorderRecommendation {
   @@index([status])
   @@map("reorder_recommendations")
 }
+
+// ============================================
+// Phase 5: Локации товаров на складе
+// ============================================
+model WarehouseLocation {
+  id           Int      @id @default(autoincrement())
+  warehouse    String   @db.VarChar(50)
+  locationCode String   @map("location_code") @db.VarChar(20) // "A-01-02" (зона-ряд-полка)
+  zone         String   @db.VarChar(10)     // "A", "B", "C" - зоны склада
+  aisle        Int      // Ряд
+  shelf        Int      // Полка
+  position     Int      @default(1)         // Позиция на полке
+
+  // Координаты для расчёта расстояния (опционально)
+  coordX Float? @map("coord_x")
+  coordY Float? @map("coord_y")
+
+  // Метаданные
+  maxCapacity  Int?    @map("max_capacity")
+  locationType String  @default("shelf") @map("location_type") @db.VarChar(20) // "shelf", "pallet", "bin", "floor"
+  isActive     Boolean @default(true) @map("is_active")
+
+  // SKU на этой локации
+  inventoryLocations InventoryLocation[]
+
+  @@unique([warehouse, locationCode])
+  @@index([warehouse])
+  @@index([zone])
+  @@map("warehouse_locations")
+}
+
+// ============================================
+// Phase 5: Связь товаров с локациями
+// ============================================
+model InventoryLocation {
+  id         Int     @id @default(autoincrement())
+  sku        String  @db.VarChar(50)
+  locationId Int     @map("location_id")
+  quantity   Int     @default(0)
+  isPrimary  Boolean @default(true) @map("is_primary") // Основная локация товара
+
+  location WarehouseLocation @relation(fields: [locationId], references: [id])
+
+  @@unique([sku, locationId])
+  @@index([sku])
+  @@index([locationId])
+  @@map("inventory_locations")
+}
+
+// ============================================
+// Phase 5: Лист сборки (Picking List)
+// ============================================
+model PickingList {
+  id          Int     @id @default(autoincrement())
+  listNumber  String  @unique @map("list_number") @db.VarChar(30) // "PL-2026-01-31-001"
+  warehouse   String  @db.VarChar(50)
+
+  // Тип сборки
+  pickingType String  @map("picking_type") @db.VarChar(20) // "single", "batch", "wave"
+
+  // Статус
+  status   String @default("created") @db.VarChar(20) // "created", "assigned", "in_progress", "completed", "cancelled"
+  priority Int    @default(0) // 0-низкий, 1-нормальный, 2-высокий, 3-срочный
+
+  // Назначение
+  assignedTo String?   @map("assigned_to") @db.VarChar(100) // Worker ID/name
+  assignedAt DateTime? @map("assigned_at")
+
+  // Время
+  startedAt     DateTime? @map("started_at")
+  completedAt   DateTime? @map("completed_at")
+  estimatedMins Int?      @map("estimated_mins") // Оценка времени сборки
+  actualMins    Int?      @map("actual_mins")    // Фактическое время
+
+  // Маршрут
+  optimizedRoute Json?  @map("optimized_route") // Последовательность локаций
+  totalDistance  Float? @map("total_distance")  // Расчётное расстояние (метры)
+
+  // Связи
+  items  PickingItem[]
+  orders PickingOrder[]
+
+  // Метаданные
+  notes     String?  @db.Text
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([warehouse])
+  @@index([status])
+  @@index([assignedTo])
+  @@index([createdAt])
+  @@map("picking_lists")
+}
+
+// ============================================
+// Phase 5: Позиции в листе сборки
+// ============================================
+model PickingItem {
+  id            Int @id @default(autoincrement())
+  pickingListId Int @map("picking_list_id")
+
+  // Товар
+  sku         String @db.VarChar(50)
+  productName String @map("product_name") @db.VarChar(255)
+
+  // Количество
+  requiredQty Int @map("required_qty")  // Требуется собрать
+  pickedQty   Int @default(0) @map("picked_qty") // Фактически собрано
+
+  // Локация
+  locationCode String @map("location_code") @db.VarChar(20)
+  zone         String @db.VarChar(10)
+
+  // Порядок обхода
+  sequenceNum Int @map("sequence_num") // Порядковый номер в маршруте
+
+  // Статус
+  status String @default("pending") @db.VarChar(20) // "pending", "picked", "skipped", "shortage"
+
+  // Подтверждение
+  confirmedAt DateTime? @map("confirmed_at")
+  confirmedBy String?   @map("confirmed_by") @db.VarChar(100)
+  barcodeScan String?   @map("barcode_scan") @db.VarChar(100) // Отсканированный штрихкод
+
+  // Проблемы
+  issueType String? @map("issue_type") @db.VarChar(30) // "not_found", "wrong_location", "damaged", "shortage"
+  issueNote String? @map("issue_note") @db.Text
+
+  // Связи
+  pickingList PickingList @relation(fields: [pickingListId], references: [id])
+
+  @@index([pickingListId])
+  @@index([sku])
+  @@index([status])
+  @@map("picking_items")
+}
+
+// ============================================
+// Phase 5: Заказы в листе сборки (для batch picking)
+// ============================================
+model PickingOrder {
+  id            Int @id @default(autoincrement())
+  pickingListId Int @map("picking_list_id")
+
+  // Заказ из 1C
+  orderNumber  String  @map("order_number") @db.VarChar(50)
+  customerName String? @map("customer_name") @db.VarChar(255)
+
+  // Статус в контексте сборки
+  status String @default("pending") @db.VarChar(20) // "pending", "in_progress", "completed"
+
+  // Связь с документом 1C (после завершения)
+  shipmentDocId String? @map("shipment_doc_id") @db.VarChar(100)
+
+  // Связи
+  pickingList PickingList @relation(fields: [pickingListId], references: [id])
+
+  @@index([pickingListId])
+  @@index([orderNumber])
+  @@map("picking_orders")
+}
+
+// ============================================
+// Phase 5: История сборок (аналитика)
+// ============================================
+model PickingHistory {
+  id            Int    @id @default(autoincrement())
+  pickingListId Int    @map("picking_list_id")
+  workerId      String @map("worker_id") @db.VarChar(100)
+  warehouse     String @db.VarChar(50)
+
+  // Метрики
+  itemCount     Int @map("item_count")
+  totalQty      Int @map("total_qty")
+  pickingMins   Int @map("picking_mins")
+  errorCount    Int @default(0) @map("error_count")
+  shortageCount Int @default(0) @map("shortage_count")
+
+  // Расчётные метрики
+  picksPerHour Float @map("picks_per_hour")
+  accuracy     Float // 0.0 - 1.0
+
+  // Сравнение с оценкой
+  estimatedMins Int   @map("estimated_mins")
+  efficiency    Float // actual vs estimated (< 1.0 = быстрее ожидаемого)
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([workerId])
+  @@index([warehouse])
+  @@index([createdAt])
+  @@map("picking_history")
+}

@@ -119,6 +119,17 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Copy deployment files
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_SSH_PORT }}
+          source: "docker-compose.prod.yml,nginx/"
+          target: ${{ secrets.PROJECT_PATH_PROD }}
+          overwrite: true
+
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.0.3
         env:
@@ -204,11 +215,11 @@ jobs:
             # Пуллим новый образ
             docker compose -f docker-compose.prod.yml pull app worker
             
-            # Запускаем миграции
+            # Применяем миграции БД
             docker compose -f docker-compose.prod.yml run --rm app npx prisma migrate deploy || true
             
             # Перезапускаем сервисы (zero-downtime с nginx)
-            docker compose -f docker-compose.prod.yml up -d --remove-orphans --no-deps app worker
+            docker compose -f docker-compose.prod.yml up -d --remove-orphans app worker nginx
             
             # Ждём healthcheck
             echo "⏳ Waiting for healthcheck..."
@@ -243,6 +254,17 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Copy deployment files
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_SSH_PORT }}
+          source: "docker-compose.prod.yml,nginx/"
+          target: ${{ secrets.PROJECT_PATH_DEV }}
+          overwrite: true
 
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.0.3
@@ -329,11 +351,11 @@ jobs:
             # Пуллим новый образ
             docker compose -f docker-compose.prod.yml pull app worker
             
-            # Запускаем миграции
+            # Применяем миграции БД
             docker compose -f docker-compose.prod.yml run --rm app npx prisma migrate deploy || true
             
             # Перезапускаем сервисы
-            docker compose -f docker-compose.prod.yml up -d --remove-orphans --no-deps app worker
+            docker compose -f docker-compose.prod.yml up -d --remove-orphans app worker nginx
             
             # Ждём healthcheck
             echo "⏳ Waiting for healthcheck..."

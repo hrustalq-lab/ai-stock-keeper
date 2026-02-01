@@ -1,8 +1,14 @@
 # ============================================
-# AI Stock Keeper - Production Docker Compose
-# Self-hosted VPS deployment
+# AI Stock Keeper - Development Docker Compose
+# Self-hosted VPS deployment (development environment)
 # ============================================
-# Запуск: docker compose -f docker-compose.prod.yml up -d
+# Запуск: docker compose -f docker-compose.dev.yml up -d
+#
+# Отличия от production:
+# - Другие имена контейнеров (суффикс -dev)
+# - Отдельная Docker-сеть (ai-stock-dev-network)
+# - NODE_ENV=development
+# - Альтернативные порты для nginx (8080/8443)
 #
 # Внешние сервисы (подключаются через ENV):
 # - PostgreSQL: DATABASE_URL
@@ -10,15 +16,15 @@
 
 services:
   # ============================================
-  # Nginx Reverse Proxy
+  # Nginx Reverse Proxy (Development)
   # ============================================
   nginx:
     image: nginx:alpine
-    container_name: ai-stock-keeper-nginx
+    container_name: ai-stock-keeper-dev-nginx
     restart: unless-stopped
     ports:
-      - "${NGINX_HTTP_PORT:-80}:80"
-      - "${NGINX_HTTPS_PORT:-443}:443"
+      - "${NGINX_HTTP_PORT:-8080}:80"
+      - "${NGINX_HTTPS_PORT:-8443}:443"
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./nginx/conf.d:/etc/nginx/conf.d:ro
@@ -28,7 +34,7 @@ services:
       app:
         condition: service_healthy
     networks:
-      - ai-stock-network
+      - ai-stock-dev-network
     healthcheck:
       test: ["CMD", "nginx", "-t"]
       interval: 30s
@@ -36,16 +42,16 @@ services:
       retries: 3
 
   # ============================================
-  # Next.js Application (via PM2)
+  # Next.js Application (Development)
   # ============================================
   app:
-    image: ghcr.io/hrustalq-lab/ai-stock-keeper:${APP_VERSION:-latest}
-    container_name: ai-stock-keeper-app
+    image: ghcr.io/hrustalq-lab/ai-stock-keeper:${APP_VERSION:-dev}
+    container_name: ai-stock-keeper-dev-app
     restart: unless-stopped
     expose:
       - "3000"
     environment:
-      NODE_ENV: production
+      NODE_ENV: development
       DATABASE_URL: ${DATABASE_URL}
       REDIS_URL: ${REDIS_URL}
       # 1C интеграция
@@ -54,12 +60,12 @@ services:
       ONE_C_PASSWORD: ${ONE_C_PASSWORD}
       ONE_C_WAREHOUSE_ID: ${ONE_C_WAREHOUSE_ID}
       ONE_C_WEBHOOK_SECRET: ${ONE_C_WEBHOOK_SECRET}
-      ONE_C_AUTO_CREATE_SHIPMENT: ${ONE_C_AUTO_CREATE_SHIPMENT:-true}
-      BULL_QUEUE_NAME: ${BULL_QUEUE_NAME:-1c-sync-queue}
+      ONE_C_AUTO_CREATE_SHIPMENT: ${ONE_C_AUTO_CREATE_SHIPMENT:-false}
+      BULL_QUEUE_NAME: ${BULL_QUEUE_NAME:-1c-sync-queue-dev}
       # Уведомления (Phase 3)
       RESEND_API_KEY: ${RESEND_API_KEY:-}
-      RESEND_FROM_EMAIL: ${RESEND_FROM_EMAIL:-alerts@localhost}
-      ALERT_DEFAULT_COOLDOWN_MINS: ${ALERT_DEFAULT_COOLDOWN_MINS:-60}
+      RESEND_FROM_EMAIL: ${RESEND_FROM_EMAIL:-alerts-dev@localhost}
+      ALERT_DEFAULT_COOLDOWN_MINS: ${ALERT_DEFAULT_COOLDOWN_MINS:-5}
       # Прогнозирование (Phase 4)
       PROPHET_SERVICE_URL: ${PROPHET_SERVICE_URL:-}
       FORECAST_DEFAULT_HISTORY_DAYS: ${FORECAST_DEFAULT_HISTORY_DAYS:-60}
@@ -71,7 +77,7 @@ services:
       WAREHOUSE_WALKING_SPEED_MPS: ${WAREHOUSE_WALKING_SPEED_MPS:-1.4}
       WAREHOUSE_PICK_TIME_SECONDS: ${WAREHOUSE_PICK_TIME_SECONDS:-15}
     networks:
-      - ai-stock-network
+      - ai-stock-dev-network
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:3000/"]
       interval: 30s
@@ -80,15 +86,15 @@ services:
       start_period: 60s
 
   # ============================================
-  # Background Worker (Bull Queue)
+  # Background Worker (Development)
   # ============================================
   worker:
-    image: ghcr.io/hrustalq-lab/ai-stock-keeper:${APP_VERSION:-latest}
-    container_name: ai-stock-keeper-worker
+    image: ghcr.io/hrustalq-lab/ai-stock-keeper:${APP_VERSION:-dev}
+    container_name: ai-stock-keeper-dev-worker
     restart: unless-stopped
     command: ["node", "worker.cjs"]
     environment:
-      NODE_ENV: production
+      NODE_ENV: development
       DATABASE_URL: ${DATABASE_URL}
       REDIS_URL: ${REDIS_URL}
       # 1C интеграция
@@ -96,12 +102,12 @@ services:
       ONE_C_USERNAME: ${ONE_C_USERNAME}
       ONE_C_PASSWORD: ${ONE_C_PASSWORD}
       ONE_C_WAREHOUSE_ID: ${ONE_C_WAREHOUSE_ID}
-      ONE_C_AUTO_CREATE_SHIPMENT: ${ONE_C_AUTO_CREATE_SHIPMENT:-true}
-      BULL_QUEUE_NAME: ${BULL_QUEUE_NAME:-1c-sync-queue}
+      ONE_C_AUTO_CREATE_SHIPMENT: ${ONE_C_AUTO_CREATE_SHIPMENT:-false}
+      BULL_QUEUE_NAME: ${BULL_QUEUE_NAME:-1c-sync-queue-dev}
       # Уведомления (Phase 3)
       RESEND_API_KEY: ${RESEND_API_KEY:-}
-      RESEND_FROM_EMAIL: ${RESEND_FROM_EMAIL:-alerts@localhost}
-      ALERT_DEFAULT_COOLDOWN_MINS: ${ALERT_DEFAULT_COOLDOWN_MINS:-60}
+      RESEND_FROM_EMAIL: ${RESEND_FROM_EMAIL:-alerts-dev@localhost}
+      ALERT_DEFAULT_COOLDOWN_MINS: ${ALERT_DEFAULT_COOLDOWN_MINS:-5}
       # Прогнозирование (Phase 4)
       PROPHET_SERVICE_URL: ${PROPHET_SERVICE_URL:-}
       FORECAST_DEFAULT_HISTORY_DAYS: ${FORECAST_DEFAULT_HISTORY_DAYS:-60}
@@ -113,8 +119,8 @@ services:
       WAREHOUSE_WALKING_SPEED_MPS: ${WAREHOUSE_WALKING_SPEED_MPS:-1.4}
       WAREHOUSE_PICK_TIME_SECONDS: ${WAREHOUSE_PICK_TIME_SECONDS:-15}
     networks:
-      - ai-stock-network
+      - ai-stock-dev-network
 
 networks:
-  ai-stock-network:
+  ai-stock-dev-network:
     driver: bridge

@@ -224,6 +224,10 @@ jobs:
             # Логинимся в GitHub Container Registry
             echo "${GH_TOKEN}" | docker login ghcr.io -u "${GH_ACTOR}" --password-stdin
             
+            # Экспортируем версию для docker compose
+            export APP_VERSION="${APP_VERSION}"
+            echo "📦 Pulling image version: ${APP_VERSION}"
+            
             # Пуллим новый образ
             docker compose -f docker-compose.prod.yml pull app worker
             
@@ -377,6 +381,10 @@ jobs:
             
             # Логинимся в GitHub Container Registry
             echo "${GH_TOKEN}" | docker login ghcr.io -u "${GH_ACTOR}" --password-stdin
+            
+            # Экспортируем версию для docker compose
+            export APP_VERSION="${APP_VERSION}"
+            echo "📦 Pulling image version: ${APP_VERSION}"
             
             # Пуллим новый образ
             docker compose -f docker-compose.dev.yml pull app worker

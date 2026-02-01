@@ -75,7 +75,7 @@ services:
     image: ghcr.io/hrustalq-lab/ai-stock-keeper:${APP_VERSION:-latest}
     container_name: ai-stock-keeper-worker
     restart: unless-stopped
-    command: ["node", "-e", "require('./scripts/worker.ts')"]
+    command: ["node", "worker.js"]
     environment:
       NODE_ENV: production
       DATABASE_URL: ${DATABASE_URL}

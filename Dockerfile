@@ -4,7 +4,7 @@
 # ============================================
 
 # ============================================
-# Stage 1: Dependencies
+# Stage 1: Dependencies (all)
 # ============================================
 FROM node:20-alpine AS deps
 RUN apk add --no-cache libc6-compat openssl
@@ -15,11 +15,25 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 COPY prisma ./prisma/
 
-# Устанавливаем зависимости
+# Устанавливаем все зависимости
 RUN npm ci --legacy-peer-deps
 
 # ============================================
-# Stage 2: Builder
+# Stage 2: Production Dependencies
+# ============================================
+FROM node:20-alpine AS deps-prod
+RUN apk add --no-cache libc6-compat openssl
+
+WORKDIR /app
+
+COPY package.json package-lock.json ./
+COPY prisma ./prisma/
+
+# Устанавливаем только production зависимости
+RUN npm ci --legacy-peer-deps --omit=dev
+
+# ============================================
+# Stage 3: Builder
 # ============================================
 FROM node:20-alpine AS builder
 
@@ -37,8 +51,12 @@ ENV NEXT_TELEMETRY_DISABLED=1
 
 RUN npm run build
 
+# Компилируем worker в JavaScript (bundle для production)
+RUN npx esbuild scripts/worker.ts --bundle --platform=node --target=node20 --outfile=dist/worker.js \
+    --external:@prisma/client --external:pg --external:ioredis
+
 # ============================================
-# Stage 3: Runner (Production)
+# Stage 4: Runner (Production)
 # ============================================
 FROM node:20-alpine AS runner
 
@@ -55,16 +73,23 @@ RUN apk add --no-cache openssl
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/package.json ./package.json
 
-# Копируем standalone output
+# Копируем standalone output (Next.js app)
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
-# Копируем Prisma для миграций
+# Копируем Prisma
 COPY --from=builder /app/prisma ./prisma
-COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
-COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
 
-# Копируем OCR language data (если нужно)
+# Копируем скомпилированный worker
+COPY --from=builder --chown=nextjs:nodejs /app/dist/worker.js ./worker.js
+
+# Копируем production node_modules (для worker: pg, ioredis, prisma)
+COPY --from=deps-prod /app/node_modules ./node_modules
+
+# Регенерируем Prisma Client для текущей платформы
+RUN npx prisma generate
+
+# Копируем OCR language data
 COPY --from=builder /app/eng.traineddata ./eng.traineddata
 COPY --from=builder /app/rus.traineddata ./rus.traineddata
 

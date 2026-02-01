@@ -118,6 +118,16 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Check for migration changes
+        id: migrations
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            changed:
+              - 'prisma/migrations/**'
 
       - name: Copy deployment files
         uses: appleboy/scp-action@v0.1.7
@@ -136,6 +146,7 @@ jobs:
           # Передаём версию через env для корректной подстановки в ssh-action
           APP_VERSION: ${{ needs.build.outputs.version }}
           PROJECT_PATH: ${{ secrets.PROJECT_PATH_PROD }}
+          RUN_MIGRATIONS: ${{ steps.migrations.outputs.changed }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_ACTOR: ${{ github.actor }}
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
@@ -152,12 +163,13 @@ jobs:
           username: ${{ secrets.VPS_USERNAME }}
           key: ${{ secrets.VPS_SSH_KEY }}
           port: ${{ secrets.VPS_SSH_PORT }}
-          envs: APP_VERSION,PROJECT_PATH,GH_TOKEN,GH_ACTOR,DATABASE_URL,REDIS_URL,ONE_C_BASE_URL,ONE_C_USERNAME,ONE_C_PASSWORD,ONE_C_WAREHOUSE_ID,ONE_C_WEBHOOK_SECRET,RESEND_API_KEY,RESEND_FROM_EMAIL
+          envs: APP_VERSION,PROJECT_PATH,GH_TOKEN,GH_ACTOR,DATABASE_URL,REDIS_URL,ONE_C_BASE_URL,ONE_C_USERNAME,ONE_C_PASSWORD,ONE_C_WAREHOUSE_ID,ONE_C_WEBHOOK_SECRET,RESEND_API_KEY,RESEND_FROM_EMAIL,RUN_MIGRATIONS
           script: |
             set -e
             
             echo "🚀 Deploying to PRODUCTION: ai-stock-keeper.hrustalq.dev"
             echo "📦 Version: ${APP_VERSION}"
+            echo "🗄️ Run migrations: ${RUN_MIGRATIONS}"
             
             # Переходим в директорию проекта
             cd "${PROJECT_PATH}"
@@ -215,8 +227,13 @@ jobs:
             # Пуллим новый образ
             docker compose -f docker-compose.prod.yml pull app worker
             
-            # Применяем миграции БД
-            docker compose -f docker-compose.prod.yml run --rm app npx prisma migrate deploy || true
+            # Применяем миграции БД (только если изменились миграционные файлы)
+            if [ "${RUN_MIGRATIONS}" = "true" ]; then
+              echo "🗄️ Applying database migrations..."
+              docker compose -f docker-compose.prod.yml run --rm app npx prisma migrate deploy
+            else
+              echo "⏭️ Skipping migrations (no changes in prisma/migrations/)"
+            fi
             
             # Перезапускаем сервисы (zero-downtime с nginx)
             docker compose -f docker-compose.prod.yml up -d --remove-orphans app worker nginx
@@ -254,6 +271,16 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Check for migration changes
+        id: migrations
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            changed:
+              - 'prisma/migrations/**'
 
       - name: Copy deployment files
         uses: appleboy/scp-action@v0.1.7
@@ -283,17 +310,19 @@ jobs:
           ONE_C_WEBHOOK_SECRET: ${{ secrets.ONE_C_WEBHOOK_SECRET }}
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
           RESEND_FROM_EMAIL: alerts-dev@hrustalq.dev
+          RUN_MIGRATIONS: ${{ steps.migrations.outputs.changed }}
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USERNAME }}
           key: ${{ secrets.VPS_SSH_KEY }}
           port: ${{ secrets.VPS_SSH_PORT }}
-          envs: APP_VERSION,PROJECT_PATH,GH_TOKEN,GH_ACTOR,DATABASE_URL,REDIS_URL,ONE_C_BASE_URL,ONE_C_USERNAME,ONE_C_PASSWORD,ONE_C_WAREHOUSE_ID,ONE_C_WEBHOOK_SECRET,RESEND_API_KEY,RESEND_FROM_EMAIL
+          envs: APP_VERSION,PROJECT_PATH,GH_TOKEN,GH_ACTOR,DATABASE_URL,REDIS_URL,ONE_C_BASE_URL,ONE_C_USERNAME,ONE_C_PASSWORD,ONE_C_WAREHOUSE_ID,ONE_C_WEBHOOK_SECRET,RESEND_API_KEY,RESEND_FROM_EMAIL,RUN_MIGRATIONS
           script: |
             set -e
             
             echo "🚀 Deploying to DEVELOPMENT: ai-stock-keeper-dev.hrustalq.dev"
             echo "📦 Version: ${APP_VERSION}"
+            echo "🗄️ Run migrations: ${RUN_MIGRATIONS}"
             
             # Переходим в директорию проекта
             cd "${PROJECT_PATH}"
@@ -351,8 +380,13 @@ jobs:
             # Пуллим новый образ
             docker compose -f docker-compose.prod.yml pull app worker
             
-            # Применяем миграции БД
-            docker compose -f docker-compose.prod.yml run --rm app npx prisma migrate deploy || true
+            # Применяем миграции БД (только если изменились миграционные файлы)
+            if [ "${RUN_MIGRATIONS}" = "true" ]; then
+              echo "🗄️ Applying database migrations..."
+              docker compose -f docker-compose.prod.yml run --rm app npx prisma migrate deploy
+            else
+              echo "⏭️ Skipping migrations (no changes in prisma/migrations/)"
+            fi
             
             # Перезапускаем сервисы
             docker compose -f docker-compose.prod.yml up -d --remove-orphans app worker nginx

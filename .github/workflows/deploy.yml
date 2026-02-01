@@ -235,8 +235,8 @@ jobs:
               echo "⏭️ Skipping migrations (no changes in prisma/migrations/)"
             fi
             
-            # Перезапускаем сервисы (zero-downtime с nginx)
-            docker compose -f docker-compose.prod.yml up -d --remove-orphans app worker nginx
+            # Перезапускаем сервисы (без nginx - он управляется через dev.yml)
+            docker compose -f docker-compose.prod.yml up -d --remove-orphans app worker
             
             # Ждём healthcheck
             echo "⏳ Waiting for healthcheck..."
@@ -245,8 +245,9 @@ jobs:
             # Проверяем статус
             docker compose -f docker-compose.prod.yml ps
             
-            # Перезагружаем nginx для применения изменений
-            docker compose -f docker-compose.prod.yml exec -T nginx nginx -s reload || true
+            # Перезагружаем nginx из dev директории для обновления конфигов
+            cd /root/ai-stock-keeper-dev && docker compose -f docker-compose.dev.yml exec -T nginx nginx -s reload || true
+            cd "${PROJECT_PATH}"
             
             # Чистим старые образы
             docker image prune -af --filter "until=168h"

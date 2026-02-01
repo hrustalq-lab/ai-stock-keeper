@@ -5,10 +5,9 @@
 # Запуск: docker compose -f docker-compose.dev.yml up -d
 #
 # Отличия от production:
-# - Другие имена контейнеров (суффикс -dev)
-# - Отдельная Docker-сеть (ai-stock-dev-network)
+# - Включает nginx (shared для обоих окружений)
 # - NODE_ENV=development
-# - Альтернативные порты для nginx (8080/8443)
+# - Имена контейнеров без суффикса (nginx обслуживает оба домена)
 #
 # Внешние сервисы (подключаются через ENV):
 # - PostgreSQL: DATABASE_URL
@@ -16,15 +15,15 @@
 
 services:
   # ============================================
-  # Nginx Reverse Proxy (Development)
+  # Nginx Reverse Proxy (Shared for dev + prod)
   # ============================================
   nginx:
     image: nginx:alpine
-    container_name: ai-stock-keeper-dev-nginx
+    container_name: ai-stock-keeper-nginx
     restart: unless-stopped
     ports:
-      - "${NGINX_HTTP_PORT:-8080}:80"
-      - "${NGINX_HTTPS_PORT:-8443}:443"
+      - "${NGINX_HTTP_PORT:-80}:80"
+      - "${NGINX_HTTPS_PORT:-443}:443"
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./nginx/conf.d:/etc/nginx/conf.d:ro
@@ -34,7 +33,7 @@ services:
       app:
         condition: service_healthy
     networks:
-      - ai-stock-dev-network
+      - ai-stock-shared
     healthcheck:
       test: ["CMD", "nginx", "-t"]
       interval: 30s
@@ -46,7 +45,7 @@ services:
   # ============================================
   app:
     image: ghcr.io/hrustalq-lab/ai-stock-keeper:${APP_VERSION:-dev}
-    container_name: ai-stock-keeper-dev-app
+    container_name: ai-stock-keeper-app
     restart: unless-stopped
     expose:
       - "3000"
@@ -77,7 +76,7 @@ services:
       WAREHOUSE_WALKING_SPEED_MPS: ${WAREHOUSE_WALKING_SPEED_MPS:-1.4}
       WAREHOUSE_PICK_TIME_SECONDS: ${WAREHOUSE_PICK_TIME_SECONDS:-15}
     networks:
-      - ai-stock-dev-network
+      - ai-stock-shared
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:3000/"]
       interval: 30s
@@ -90,7 +89,7 @@ services:
   # ============================================
   worker:
     image: ghcr.io/hrustalq-lab/ai-stock-keeper:${APP_VERSION:-dev}
-    container_name: ai-stock-keeper-dev-worker
+    container_name: ai-stock-keeper-worker
     restart: unless-stopped
     command: ["node", "worker.cjs"]
     environment:
@@ -119,8 +118,8 @@ services:
       WAREHOUSE_WALKING_SPEED_MPS: ${WAREHOUSE_WALKING_SPEED_MPS:-1.4}
       WAREHOUSE_PICK_TIME_SECONDS: ${WAREHOUSE_PICK_TIME_SECONDS:-15}
     networks:
-      - ai-stock-dev-network
+      - ai-stock-shared
 
 networks:
-  ai-stock-dev-network:
-    driver: bridge
+  ai-stock-shared:
+    external: true

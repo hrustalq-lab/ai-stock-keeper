@@ -289,7 +289,7 @@ jobs:
           username: ${{ secrets.VPS_USERNAME }}
           key: ${{ secrets.VPS_SSH_KEY }}
           port: ${{ secrets.VPS_SSH_PORT }}
-          source: "docker-compose.prod.yml,nginx/"
+          source: "docker-compose.dev.yml,nginx/"
           target: ${{ secrets.PROJECT_PATH_DEV }}
           overwrite: true
 
@@ -378,28 +378,28 @@ jobs:
             echo "${GH_TOKEN}" | docker login ghcr.io -u "${GH_ACTOR}" --password-stdin
             
             # Пуллим новый образ
-            docker compose -f docker-compose.prod.yml pull app worker
+            docker compose -f docker-compose.dev.yml pull app worker
             
             # Применяем миграции БД (только если изменились миграционные файлы)
             if [ "${RUN_MIGRATIONS}" = "true" ]; then
               echo "🗄️ Applying database migrations..."
-              docker compose -f docker-compose.prod.yml run --rm app npx prisma migrate deploy
+              docker compose -f docker-compose.dev.yml run --rm app npx prisma migrate deploy
             else
               echo "⏭️ Skipping migrations (no changes in prisma/migrations/)"
             fi
             
             # Перезапускаем сервисы
-            docker compose -f docker-compose.prod.yml up -d --remove-orphans app worker nginx
+            docker compose -f docker-compose.dev.yml up -d --remove-orphans app worker nginx
             
             # Ждём healthcheck
             echo "⏳ Waiting for healthcheck..."
             sleep 15
             
             # Проверяем статус
-            docker compose -f docker-compose.prod.yml ps
+            docker compose -f docker-compose.dev.yml ps
             
             # Перезагружаем nginx
-            docker compose -f docker-compose.prod.yml exec -T nginx nginx -s reload || true
+            docker compose -f docker-compose.dev.yml exec -T nginx nginx -s reload || true
             
             # Чистим старые образы (агрессивнее для dev)
             docker image prune -af --filter "until=24h"

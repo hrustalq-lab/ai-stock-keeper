@@ -7,7 +7,7 @@
 # ============================================
 # Stage 1: Dependencies (all)
 # ============================================
-FROM node:20-alpine AS deps
+FROM node:24-alpine AS deps
 RUN apk add --no-cache libc6-compat openssl
 
 WORKDIR /app
@@ -23,7 +23,7 @@ RUN --mount=type=cache,target=/root/.npm \
 # ============================================
 # Stage 2: Production Dependencies
 # ============================================
-FROM node:20-alpine AS deps-prod
+FROM node:24-alpine AS deps-prod
 RUN apk add --no-cache libc6-compat openssl
 
 WORKDIR /app
@@ -38,7 +38,7 @@ RUN --mount=type=cache,target=/root/.npm \
 # ============================================
 # Stage 3: Builder
 # ============================================
-FROM node:20-alpine AS builder
+FROM node:24-alpine AS builder
 
 WORKDIR /app
 
@@ -58,13 +58,13 @@ RUN --mount=type=cache,target=/app/.next/cache \
 
 # Компилируем worker в JavaScript (bundle для production)
 # Используем .cjs т.к. package.json имеет "type": "module"
-RUN npx esbuild scripts/worker.ts --bundle --platform=node --target=node20 --outfile=dist/worker.cjs \
+RUN npx esbuild scripts/worker.ts --bundle --platform=node --target=node24 --outfile=dist/worker.cjs \
     --external:@prisma/client --external:pg --external:ioredis
 
 # ============================================
 # Stage 4: Runner (Production)
 # ============================================
-FROM node:20-alpine AS runner
+FROM node:24-alpine AS runner
 
 WORKDIR /app
 

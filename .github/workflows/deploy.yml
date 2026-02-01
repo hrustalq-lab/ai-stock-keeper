@@ -109,7 +109,10 @@ jobs:
     name: Deploy to Production
     runs-on: ubuntu-latest
     needs: build
-    if: startsWith(github.ref, 'refs/tags/v')
+    # Запускается при: release тегах ИЛИ manual trigger с environment=production
+    if: |
+      startsWith(github.ref, 'refs/tags/v') ||
+      (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'production')
     environment: production
 
     steps:
@@ -119,6 +122,11 @@ jobs:
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.0.3
         env:
+          # Передаём версию через env для корректной подстановки в ssh-action
+          APP_VERSION: ${{ needs.build.outputs.version }}
+          PROJECT_PATH: ${{ secrets.PROJECT_PATH_PROD }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_ACTOR: ${{ github.actor }}
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           REDIS_URL: ${{ secrets.REDIS_URL }}
           ONE_C_BASE_URL: ${{ secrets.ONE_C_BASE_URL }}
@@ -132,14 +140,15 @@ jobs:
           username: ${{ secrets.VPS_USERNAME }}
           key: ${{ secrets.VPS_SSH_KEY }}
           port: ${{ secrets.VPS_SSH_PORT }}
-          envs: DATABASE_URL,REDIS_URL,ONE_C_BASE_URL,ONE_C_USERNAME,ONE_C_PASSWORD,ONE_C_WAREHOUSE_ID,ONE_C_WEBHOOK_SECRET,RESEND_API_KEY
+          envs: APP_VERSION,PROJECT_PATH,GH_TOKEN,GH_ACTOR,DATABASE_URL,REDIS_URL,ONE_C_BASE_URL,ONE_C_USERNAME,ONE_C_PASSWORD,ONE_C_WAREHOUSE_ID,ONE_C_WEBHOOK_SECRET,RESEND_API_KEY
           script: |
             set -e
             
             echo "🚀 Deploying to PRODUCTION: ai-stock-keeper.hrustalq.dev"
+            echo "📦 Version: ${APP_VERSION}"
             
             # Переходим в директорию проекта
-            cd ${{ secrets.PROJECT_PATH_PROD }}
+            cd "${PROJECT_PATH}"
             
             # Создаём/обновляем .env из GitHub Secrets
             cat > .env << EOF
@@ -147,7 +156,7 @@ jobs:
             # AI Stock Keeper - PRODUCTION (auto-generated)
             # ============================================
             NODE_ENV=production
-            APP_VERSION=${{ needs.build.outputs.version }}
+            APP_VERSION="${APP_VERSION}"
             
             # Database
             DATABASE_URL="${DATABASE_URL}"
@@ -189,11 +198,7 @@ jobs:
             echo "✅ .env updated from GitHub Secrets"
             
             # Логинимся в GitHub Container Registry
-            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-            
-            # Устанавливаем версию
-            export APP_VERSION="${{ needs.build.outputs.version }}"
-            echo "📦 Version: $APP_VERSION"
+            echo "${GH_TOKEN}" | docker login ghcr.io -u "${GH_ACTOR}" --password-stdin
             
             # Пуллим новый образ
             docker compose -f docker-compose.prod.yml pull app worker
@@ -219,7 +224,7 @@ jobs:
             
             echo "✅ Production deployment completed!"
             echo "🌐 URL: https://ai-stock-keeper.hrustalq.dev"
-            echo "🏷️ Release: $APP_VERSION"
+            echo "🏷️ Release: ${APP_VERSION}"
 
   # ============================================
   # Deploy to Development
@@ -228,7 +233,10 @@ jobs:
     name: Deploy to Development
     runs-on: ubuntu-latest
     needs: build
-    if: github.ref == 'refs/heads/dev'
+    # Запускается при: push в dev ИЛИ manual trigger с environment=development
+    if: |
+      github.ref == 'refs/heads/dev' ||
+      (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'development')
     environment: development
 
     steps:
@@ -238,6 +246,11 @@ jobs:
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.0.3
         env:
+          # Передаём все переменные через env для корректной подстановки в ssh-action
+          APP_VERSION: dev
+          PROJECT_PATH: ${{ secrets.PROJECT_PATH_DEV }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_ACTOR: ${{ github.actor }}
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           REDIS_URL: ${{ secrets.REDIS_URL }}
           ONE_C_BASE_URL: ${{ secrets.ONE_C_BASE_URL }}
@@ -251,14 +264,15 @@ jobs:
           username: ${{ secrets.VPS_USERNAME }}
           key: ${{ secrets.VPS_SSH_KEY }}
           port: ${{ secrets.VPS_SSH_PORT }}
-          envs: DATABASE_URL,REDIS_URL,ONE_C_BASE_URL,ONE_C_USERNAME,ONE_C_PASSWORD,ONE_C_WAREHOUSE_ID,ONE_C_WEBHOOK_SECRET,RESEND_API_KEY
+          envs: APP_VERSION,PROJECT_PATH,GH_TOKEN,GH_ACTOR,DATABASE_URL,REDIS_URL,ONE_C_BASE_URL,ONE_C_USERNAME,ONE_C_PASSWORD,ONE_C_WAREHOUSE_ID,ONE_C_WEBHOOK_SECRET,RESEND_API_KEY
           script: |
             set -e
             
             echo "🚀 Deploying to DEVELOPMENT: ai-stock-keeper-dev.hrustalq.dev"
+            echo "📦 Version: ${APP_VERSION}"
             
             # Переходим в директорию проекта
-            cd ${{ secrets.PROJECT_PATH_DEV }}
+            cd "${PROJECT_PATH}"
             
             # Создаём/обновляем .env из GitHub Secrets
             cat > .env << EOF
@@ -266,7 +280,7 @@ jobs:
             # AI Stock Keeper - DEVELOPMENT (auto-generated)
             # ============================================
             NODE_ENV=production
-            APP_VERSION=dev
+            APP_VERSION="${APP_VERSION}"
             
             # Database
             DATABASE_URL="${DATABASE_URL}"
@@ -308,11 +322,7 @@ jobs:
             echo "✅ .env updated from GitHub Secrets"
             
             # Логинимся в GitHub Container Registry
-            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-            
-            # Устанавливаем версию (используем dev тег)
-            export APP_VERSION="dev"
-            echo "📦 Version: $APP_VERSION"
+            echo "${GH_TOKEN}" | docker login ghcr.io -u "${GH_ACTOR}" --password-stdin
             
             # Пуллим новый образ
             docker compose -f docker-compose.prod.yml pull app worker
@@ -346,23 +356,32 @@ jobs:
     name: Notify
     runs-on: ubuntu-latest
     needs: [build, deploy-production, deploy-development]
-    # Запускается всегда, даже если предыдущие jobs были пропущены
-    if: ${{ always() && needs.build.result == 'success' }}
+    # always() гарантирует запуск даже при skipped зависимостях
+    # Примечание: deploy-production и deploy-development имеют взаимоисключающие условия,
+    # поэтому одна из них всегда будет skipped - это ожидаемое поведение
+    if: always()
 
     steps:
       - name: Deployment Summary
         env:
           BUILD_VERSION: ${{ needs.build.outputs.version || 'unknown' }}
-          # Добавляем fallback для пропущенных джоб (защита от undefined поведения)
-          PROD_RESULT: ${{ needs.deploy-production.result || 'skipped' }}
-          DEV_RESULT: ${{ needs.deploy-development.result || 'skipped' }}
+          BUILD_RESULT: ${{ needs.build.result }}
+          # skipped - ожидаемое значение для job с невыполненным условием
+          PROD_RESULT: ${{ needs.deploy-production.result }}
+          DEV_RESULT: ${{ needs.deploy-development.result }}
         run: |
           echo "📊 Deployment Summary"
           echo "====================="
           echo "Version: ${BUILD_VERSION}"
-          echo "Build: ${{ needs.build.result }}"
+          echo "Build: ${BUILD_RESULT}"
           echo "Production: ${PROD_RESULT:-skipped}"
           echo "Development: ${DEV_RESULT:-skipped}"
+          
+          # Проверяем критические ошибки
+          if [[ "${BUILD_RESULT}" != "success" ]]; then
+            echo "❌ Build failed!"
+            exit 1
+          fi
           
           if [[ "${PROD_RESULT}" == "success" ]]; then
             echo "🌐 Production: https://ai-stock-keeper.hrustalq.dev"
@@ -372,7 +391,7 @@ jobs:
             echo "🌐 Development: https://ai-stock-keeper-dev.hrustalq.dev"
           fi
           
-          # Общий статус
+          # Проверяем ошибки деплоя (skipped - это OK, failure - нет)
           if [[ "${PROD_RESULT}" == "failure" || "${DEV_RESULT}" == "failure" ]]; then
             echo "❌ Deployment had failures!"
             exit 1

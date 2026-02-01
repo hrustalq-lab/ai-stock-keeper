@@ -94,7 +94,9 @@ COPY --from=builder --chown=nextjs:nodejs /app/dist/worker.cjs ./worker.cjs
 COPY --from=deps-prod /app/node_modules ./node_modules
 
 # Регенерируем Prisma Client для текущей платформы
-RUN npx prisma generate
+# Примечание: prisma generate не подключается к БД, только генерирует TypeScript клиент
+# Dummy URL нужен только для валидации конфига Prisma CLI
+RUN DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy" npx prisma generate
 
 # OCR language data (eng.traineddata, rus.traineddata) скачиваются
 # автоматически tesseract.js при первом использовании OCR

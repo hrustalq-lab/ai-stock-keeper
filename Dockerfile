@@ -90,9 +90,8 @@ COPY --from=deps-prod /app/node_modules ./node_modules
 # Регенерируем Prisma Client для текущей платформы
 RUN npx prisma generate
 
-# Копируем OCR language data
-COPY --from=builder /app/eng.traineddata ./eng.traineddata
-COPY --from=builder /app/rus.traineddata ./rus.traineddata
+# OCR language data (eng.traineddata, rus.traineddata) скачиваются
+# автоматически tesseract.js при первом использовании OCR
 
 USER nextjs
 

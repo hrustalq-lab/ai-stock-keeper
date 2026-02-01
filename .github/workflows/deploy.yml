@@ -135,12 +135,13 @@ jobs:
           ONE_C_WAREHOUSE_ID: ${{ secrets.ONE_C_WAREHOUSE_ID }}
           ONE_C_WEBHOOK_SECRET: ${{ secrets.ONE_C_WEBHOOK_SECRET }}
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          RESEND_FROM_EMAIL: alerts@hrustalq.dev
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USERNAME }}
           key: ${{ secrets.VPS_SSH_KEY }}
           port: ${{ secrets.VPS_SSH_PORT }}
-          envs: APP_VERSION,PROJECT_PATH,GH_TOKEN,GH_ACTOR,DATABASE_URL,REDIS_URL,ONE_C_BASE_URL,ONE_C_USERNAME,ONE_C_PASSWORD,ONE_C_WAREHOUSE_ID,ONE_C_WEBHOOK_SECRET,RESEND_API_KEY
+          envs: APP_VERSION,PROJECT_PATH,GH_TOKEN,GH_ACTOR,DATABASE_URL,REDIS_URL,ONE_C_BASE_URL,ONE_C_USERNAME,ONE_C_PASSWORD,ONE_C_WAREHOUSE_ID,ONE_C_WEBHOOK_SECRET,RESEND_API_KEY,RESEND_FROM_EMAIL
           script: |
             set -e
             
@@ -177,7 +178,7 @@ jobs:
             
             # Email
             RESEND_API_KEY="${RESEND_API_KEY}"
-            RESEND_FROM_EMAIL=alerts@hrustalq.dev
+            RESEND_FROM_EMAIL="${RESEND_FROM_EMAIL}"
             
             # Alert Settings
             ALERT_DEFAULT_COOLDOWN_MINS=60
@@ -259,12 +260,13 @@ jobs:
           ONE_C_WAREHOUSE_ID: ${{ secrets.ONE_C_WAREHOUSE_ID }}
           ONE_C_WEBHOOK_SECRET: ${{ secrets.ONE_C_WEBHOOK_SECRET }}
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          RESEND_FROM_EMAIL: alerts-dev@hrustalq.dev
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USERNAME }}
           key: ${{ secrets.VPS_SSH_KEY }}
           port: ${{ secrets.VPS_SSH_PORT }}
-          envs: APP_VERSION,PROJECT_PATH,GH_TOKEN,GH_ACTOR,DATABASE_URL,REDIS_URL,ONE_C_BASE_URL,ONE_C_USERNAME,ONE_C_PASSWORD,ONE_C_WAREHOUSE_ID,ONE_C_WEBHOOK_SECRET,RESEND_API_KEY
+          envs: APP_VERSION,PROJECT_PATH,GH_TOKEN,GH_ACTOR,DATABASE_URL,REDIS_URL,ONE_C_BASE_URL,ONE_C_USERNAME,ONE_C_PASSWORD,ONE_C_WAREHOUSE_ID,ONE_C_WEBHOOK_SECRET,RESEND_API_KEY,RESEND_FROM_EMAIL
           script: |
             set -e
             
@@ -301,7 +303,7 @@ jobs:
             
             # Email (disabled)
             RESEND_API_KEY="${RESEND_API_KEY}"
-            RESEND_FROM_EMAIL=alerts-dev@hrustalq.dev
+            RESEND_FROM_EMAIL="${RESEND_FROM_EMAIL}"
             
             # Alert Settings (faster for testing)
             ALERT_DEFAULT_COOLDOWN_MINS=5

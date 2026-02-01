@@ -279,7 +279,7 @@ jobs:
             # ============================================
             # AI Stock Keeper - DEVELOPMENT (auto-generated)
             # ============================================
-            NODE_ENV=production
+            NODE_ENV=development
             APP_VERSION="${APP_VERSION}"
             
             # Database

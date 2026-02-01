@@ -54,7 +54,7 @@ module.exports = {
       exec_mode: 'cluster',
       
       env: {
-        NODE_ENV: 'production',
+        NODE_ENV: 'development',
         PORT: 3001,
       },
       
@@ -112,7 +112,7 @@ module.exports = {
       exec_mode: 'fork',
       
       env: {
-        NODE_ENV: 'production',
+        NODE_ENV: 'development',
       },
       
       watch: false,

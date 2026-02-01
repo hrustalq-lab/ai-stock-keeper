@@ -1,7 +1,7 @@
 import "~/styles/globals.css";
 
 import { type Metadata } from "next";
-import { Geist } from "next/font/google";
+import { IBM_Plex_Sans } from "next/font/google";
 import { cookies } from "next/headers";
 
 import { TRPCReactProvider } from "~/trpc/react";
@@ -14,9 +14,10 @@ export const metadata: Metadata = {
   icons: [{ rel: "icon", url: "/favicon.ico" }],
 };
 
-const geist = Geist({
-  subsets: ["latin", "latin-ext"],
-  variable: "--font-geist-sans",
+const ibmPlexSans = IBM_Plex_Sans({
+  subsets: ["latin", "cyrillic"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-ibm-plex-sans",
 });
 
 export default async function RootLayout({
@@ -28,7 +29,7 @@ export default async function RootLayout({
   const defaultOpen = sidebarState !== "false";
 
   return (
-    <html lang="ru" className={geist.variable}>
+    <html lang="ru" className={ibmPlexSans.variable}>
       <body className="min-h-screen antialiased">
         <TRPCReactProvider>
           <SidebarProvider defaultOpen={defaultOpen}>

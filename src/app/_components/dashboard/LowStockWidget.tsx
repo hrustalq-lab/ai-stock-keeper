@@ -5,6 +5,11 @@
  */
 
 import { api } from "~/trpc/react";
+import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
+import { Skeleton } from "~/components/ui/skeleton";
+import { Badge } from "~/components/ui/badge";
+import { ScrollArea } from "~/components/ui/scroll-area";
+import { AlertTriangle, CheckCircle } from "lucide-react";
 
 interface LowStockWidgetProps {
   warehouse?: string;
@@ -24,73 +29,73 @@ export function LowStockWidget({
 
   if (isLoading) {
     return (
-      <div className="rounded-xl border border-zinc-700/50 bg-zinc-800/30 p-4">
-        <div className="mb-4 h-5 w-32 animate-pulse rounded bg-zinc-700" />
-        <div className="space-y-3">
+      <Card>
+        <CardHeader className="pb-2">
+          <Skeleton className="h-5 w-32" />
+        </CardHeader>
+        <CardContent className="space-y-3">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-12 animate-pulse rounded bg-zinc-700/50" />
+            <Skeleton key={i} className="h-14" />
           ))}
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     );
   }
 
   return (
-    <div className="rounded-xl border border-zinc-700/50 bg-zinc-800/30">
-      <div className="border-b border-zinc-700/50 px-4 py-3">
-        <h3 className="flex items-center gap-2 font-semibold text-white">
-          <span className="text-amber-400">⚠️</span>
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <CardTitle className="flex items-center gap-2 text-sm font-medium">
+          <AlertTriangle className="size-4 text-amber-500" />
           Низкий остаток
-          {items && items.length > 0 && (
-            <span className="rounded-full bg-amber-500/20 px-2 py-0.5 text-xs font-medium text-amber-400">
-              {items.length}
-            </span>
-          )}
-        </h3>
-      </div>
+        </CardTitle>
+        {items && items.length > 0 && (
+          <Badge variant="secondary">{items.length}</Badge>
+        )}
+      </CardHeader>
 
-      <div className="p-2">
+      <CardContent>
         {!items || items.length === 0 ? (
-          <div className="py-8 text-center">
-            <span className="text-4xl">✅</span>
-            <p className="mt-2 text-sm text-zinc-400">
-              Все остатки в норме
-            </p>
+          <div className="flex flex-col items-center gap-2 py-6">
+            <CheckCircle className="size-10 text-emerald-500" />
+            <p className="text-sm text-muted-foreground">Все остатки в норме</p>
           </div>
         ) : (
-          <ul className="divide-y divide-zinc-700/30">
-            {items.map((item) => (
-              <li
-                key={item.id}
-                className="flex items-center justify-between rounded-lg px-3 py-2 transition-colors hover:bg-zinc-700/20"
-              >
-                <div className="min-w-0 flex-1">
-                  <p className="truncate font-medium text-white">
-                    {item.name}
-                  </p>
-                  <p className="text-xs text-zinc-500">
-                    {item.sku} • {item.warehouse}
-                  </p>
+          <ScrollArea className="h-[200px]">
+            <div className="space-y-2">
+              {items.map((item) => (
+                <div
+                  key={item.id}
+                  className="flex items-center justify-between rounded-lg bg-secondary/50 p-3 transition-colors hover:bg-secondary"
+                >
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium">
+                      {item.name}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {item.sku} • {item.warehouse}
+                    </p>
+                  </div>
+                  <div className="ml-3 text-right">
+                    <p
+                      className={`text-lg font-bold ${
+                        item.quantity === 0
+                          ? "text-destructive"
+                          : "text-amber-500"
+                      }`}
+                    >
+                      {item.quantity}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      / {item.reorderPoint}
+                    </p>
+                  </div>
                 </div>
-                <div className="ml-3 text-right">
-                  <p
-                    className={`text-lg font-bold ${
-                      item.quantity === 0
-                        ? "text-red-400"
-                        : "text-amber-400"
-                    }`}
-                  >
-                    {item.quantity}
-                  </p>
-                  <p className="text-xs text-zinc-500">
-                    / {item.reorderPoint}
-                  </p>
-                </div>
-              </li>
-            ))}
-          </ul>
+              ))}
+            </div>
+          </ScrollArea>
         )}
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 }

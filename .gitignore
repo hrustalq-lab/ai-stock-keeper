@@ -45,6 +45,7 @@ yarn-error.log*
 # idea files
 .idea
 /generated/prisma
+.playwright-mcp
 
 # tesseract.js language data (downloaded automatically)
 *.traineddata

@@ -7,11 +7,37 @@
 
 import { useState } from "react";
 import { api } from "~/trpc/react";
+import { PageHeader } from "~/components/page-header";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "~/components/ui/card";
+import { Button } from "~/components/ui/button";
+import { Badge } from "~/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "~/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "~/components/ui/dialog";
 import {
   PickingListTable,
   PickingStatsWidget,
   CreatePickingListForm,
 } from "~/app/_components/picking";
+import { 
+  ClipboardList, 
+  Plus, 
+  Warehouse,
+  ListChecks,
+  CheckCircle,
+  FileText
+} from "lucide-react";
 
 type TabType = "active" | "completed" | "all";
 type StatusFilter = "created" | "assigned" | "in_progress" | "completed" | "cancelled" | undefined;
@@ -75,7 +101,6 @@ export default function PickingPage() {
     // TODO: Модалка выбора работника
     const workerId = prompt("Введите ID работника:");
     if (workerId) {
-      // Используем мутацию assign
       alert(`Назначен: ${workerId} на лист ${listId}`);
     }
   };
@@ -99,56 +124,52 @@ export default function PickingPage() {
     createMutation.mutate(data);
   };
 
-  const tabs: Array<{ key: TabType; label: string; icon: string }> = [
-    { key: "active", label: "Активные", icon: "🟡" },
-    { key: "completed", label: "Завершённые", icon: "✅" },
-    { key: "all", label: "Все", icon: "📋" },
+  const tabs: Array<{ key: TabType; label: string; icon: React.ComponentType<{ className?: string }> }> = [
+    { key: "active", label: "Активные", icon: ListChecks },
+    { key: "completed", label: "Завершённые", icon: CheckCircle },
+    { key: "all", label: "Все", icon: FileText },
   ];
 
   return (
-    <div className="min-h-screen bg-zinc-900">
-      {/* Шапка */}
-      <header className="border-b border-zinc-700/50 bg-zinc-800/50 px-6 py-4 backdrop-blur-sm">
-        <div className="mx-auto max-w-7xl">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-white">
-                📋 Управление сборкой
-              </h1>
-              <p className="mt-1 text-sm text-zinc-400">
-                Создание и отслеживание листов сборки заказов
-              </p>
-            </div>
-
-            <div className="flex items-center gap-4">
-              {/* Выбор склада */}
-              <select
-                value={selectedWarehouse}
-                onChange={(e) => setSelectedWarehouse(e.target.value)}
-                className="rounded-lg border border-zinc-600 bg-zinc-700/50 px-3 py-2 text-sm text-white focus:border-blue-500 focus:outline-none"
-              >
-                <option value="all">Все склады</option>
+    <>
+      <PageHeader
+        title="Управление сборкой"
+        description="Создание и отслеживание листов сборки заказов"
+        breadcrumbs={[{ label: "Сборка" }]}
+        actions={
+          <div className="flex items-center gap-2">
+            {/* Выбор склада */}
+            <Select
+              value={selectedWarehouse}
+              onValueChange={setSelectedWarehouse}
+            >
+              <SelectTrigger className="w-auto min-w-[100px] sm:w-[160px]">
+                <Warehouse className="mr-2 size-4 shrink-0 text-muted-foreground" />
+                <SelectValue placeholder="Склад" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Все склады</SelectItem>
                 {warehouses?.map((w) => (
-                  <option key={w} value={w}>
+                  <SelectItem key={w} value={w}>
                     {w}
-                  </option>
+                  </SelectItem>
                 ))}
-              </select>
+              </SelectContent>
+            </Select>
 
-              {/* Кнопка создания */}
-              <button
-                onClick={() => setShowCreateForm(true)}
-                className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 font-medium text-white transition-colors hover:bg-blue-500"
-              >
-                <span>+</span>
-                Новый лист
-              </button>
-            </div>
+            {/* Кнопка создания */}
+            <Button onClick={() => setShowCreateForm(true)} className="hidden sm:flex">
+              <Plus className="mr-2 size-4" />
+              Новый лист
+            </Button>
+            <Button onClick={() => setShowCreateForm(true)} size="icon" className="sm:hidden">
+              <Plus className="size-4" />
+            </Button>
           </div>
-        </div>
-      </header>
+        }
+      />
 
-      <main className="mx-auto max-w-7xl px-6 py-6">
+      <main className="flex-1 p-4 md:p-6">
         {/* Виджет статистики */}
         <div className="mb-6">
           <PickingStatsWidget
@@ -157,49 +178,69 @@ export default function PickingPage() {
         </div>
 
         {/* Вкладки */}
-        <div className="mb-4 flex gap-2">
+        <div className="mb-4 flex flex-wrap gap-2">
           {tabs.map((tab) => (
-            <button
+            <Button
               key={tab.key}
+              variant={activeTab === tab.key ? "default" : "outline"}
               onClick={() => setActiveTab(tab.key)}
-              className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
-                activeTab === tab.key
-                  ? "bg-blue-600 text-white"
-                  : "bg-zinc-800 text-zinc-300 hover:bg-zinc-700"
-              }`}
+              size="sm"
+              className="gap-1.5 text-xs sm:gap-2 sm:text-sm"
             >
-              <span>{tab.icon}</span>
-              {tab.label}
-            </button>
+              <tab.icon className="size-3.5 sm:size-4" />
+              <span className="hidden sm:inline">{tab.label}</span>
+              <span className="sm:hidden">{tab.label.slice(0, 3)}.</span>
+              {tab.key === "active" && filteredLists && activeTab !== "active" && (
+                <Badge variant="secondary" className="ml-0.5 text-[10px] sm:ml-1 sm:text-xs">
+                  {lists?.filter((l) => ["created", "assigned", "in_progress"].includes(l.status)).length ?? 0}
+                </Badge>
+              )}
+            </Button>
           ))}
         </div>
 
         {/* Таблица листов */}
-        <PickingListTable
-          lists={filteredLists ?? []}
-          onView={handleView}
-          onAssign={handleAssign}
-          onCancel={handleCancel}
-          isLoading={loadingLists}
-        />
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <ClipboardList className="size-5 text-primary" />
+              Листы сборки
+            </CardTitle>
+            <CardDescription>
+              {activeTab === "active" && "Активные листы, требующие внимания"}
+              {activeTab === "completed" && "Завершённые листы сборки"}
+              {activeTab === "all" && "Все листы сборки"}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <PickingListTable
+              lists={filteredLists ?? []}
+              onView={handleView}
+              onAssign={handleAssign}
+              onCancel={handleCancel}
+              isLoading={loadingLists}
+            />
+          </CardContent>
+        </Card>
       </main>
 
       {/* Модалка создания */}
-      {showCreateForm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
-          <div className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-xl border border-zinc-700/50 bg-zinc-800 p-6">
-            <h2 className="mb-6 text-xl font-bold text-white">
-              Создать лист сборки
-            </h2>
-            <CreatePickingListForm
-              warehouses={warehouses ?? []}
-              onSubmit={handleCreate}
-              onCancel={() => setShowCreateForm(false)}
-              isLoading={createMutation.isPending}
-            />
-          </div>
-        </div>
-      )}
-    </div>
+      <Dialog open={showCreateForm} onOpenChange={setShowCreateForm}>
+        <DialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Создать лист сборки</DialogTitle>
+            <DialogDescription>
+              Добавьте заказы и укажите параметры сборки
+            </DialogDescription>
+          </DialogHeader>
+          <CreatePickingListForm
+            warehouses={warehouses ?? []}
+            onSubmit={handleCreate}
+            onCancel={() => setShowCreateForm(false)}
+            isLoading={createMutation.isPending}
+          />
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }

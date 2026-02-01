@@ -7,11 +7,32 @@
 
 import { useState } from "react";
 import { api } from "~/trpc/react";
+import { PageHeader } from "~/components/page-header";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "~/components/ui/card";
+import { Badge } from "~/components/ui/badge";
+import { Button } from "~/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "~/components/ui/select";
 import {
   ForecastChart,
   ReorderTable,
   TrendIndicator,
 } from "~/app/_components/forecast";
+import { 
+  TrendingUp, 
+  Download, 
+  AlertCircle, 
+  AlertTriangle, 
+  CheckCircle,
+  BarChart3,
+  Info,
+  Warehouse
+} from "lucide-react";
 
 type ForecastModel = "sma" | "ema" | "prophet";
 
@@ -26,7 +47,6 @@ export default function ForecastPage() {
   const { data: warehouses } = api.inventory.getWarehouses.useQuery();
 
   // Получаем рекомендации
-  // warehouse: "all" означает все склады (поддержка в бэкенде)
   const { data: recommendations, isLoading: loadingRecs } =
     api.forecast.getRecommendations.useQuery({
       warehouse: selectedWarehouse === "all" ? undefined : selectedWarehouse,
@@ -58,251 +78,281 @@ export default function ForecastPage() {
   };
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-slate-50 to-slate-100">
-      {/* Шапка */}
-      <header className="border-b border-slate-200 bg-white/80 px-6 py-4 backdrop-blur-sm">
-        <div className="mx-auto max-w-7xl">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-slate-800">
-                📈 Прогноз запасов
-              </h1>
-              <p className="mt-1 text-sm text-slate-500">
-                Рекомендации по дозаказу на основе анализа потребления
-              </p>
-            </div>
-
-            {/* Фильтры */}
-            <div className="flex items-center gap-4">
-              {/* Склад */}
-              <select
-                value={selectedWarehouse}
-                onChange={(e) => setSelectedWarehouse(e.target.value)}
-                className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
-              >
-                <option value="all">Все склады</option>
+    <>
+      <PageHeader
+        title="Прогноз запасов"
+        description="Рекомендации по дозаказу на основе AI-анализа потребления"
+        breadcrumbs={[{ label: "Прогноз" }]}
+        actions={
+          <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+            {/* Склад */}
+            <Select
+              value={selectedWarehouse}
+              onValueChange={setSelectedWarehouse}
+            >
+              <SelectTrigger className="w-auto min-w-[90px] sm:w-[140px]">
+                <Warehouse className="mr-1.5 size-3.5 shrink-0 text-muted-foreground sm:mr-2 sm:size-4" />
+                <SelectValue placeholder="Склад" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Все склады</SelectItem>
                 {warehouses?.map((w) => (
-                  <option key={w} value={w}>
+                  <SelectItem key={w} value={w}>
                     {w}
-                  </option>
+                  </SelectItem>
                 ))}
-              </select>
+              </SelectContent>
+            </Select>
 
-              {/* Период прогноза */}
-              <select
-                value={forecastDays}
-                onChange={(e) => setForecastDays(Number(e.target.value))}
-                className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
-              >
-                <option value={7}>7 дней</option>
-                <option value={14}>14 дней</option>
-                <option value={30}>30 дней</option>
-              </select>
+            {/* Период прогноза */}
+            <Select
+              value={String(forecastDays)}
+              onValueChange={(val) => setForecastDays(Number(val))}
+            >
+              <SelectTrigger className="w-[80px] sm:w-[100px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="7">7 дней</SelectItem>
+                <SelectItem value="14">14 дней</SelectItem>
+                <SelectItem value="30">30 дней</SelectItem>
+              </SelectContent>
+            </Select>
 
-              {/* Модель */}
-              <select
-                value={model}
-                onChange={(e) => setModel(e.target.value as ForecastModel)}
-                className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
-              >
-                <option value="sma">SMA (простое среднее)</option>
-                <option value="ema">EMA (экспоненциальное)</option>
-              </select>
-            </div>
+            {/* Модель - скрываем на мобильных */}
+            <Select
+              value={model}
+              onValueChange={(val) => setModel(val as ForecastModel)}
+            >
+              <SelectTrigger className="hidden w-[140px] sm:flex">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="sma">SMA (простое среднее)</SelectItem>
+                <SelectItem value="ema">EMA (экспоненциальное)</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
-        </div>
-      </header>
+        }
+      />
 
-      <main className="mx-auto max-w-7xl px-6 py-6">
+      <main className="flex-1 p-4 md:p-6">
         {/* Сводка по срочности */}
-        <div className="mb-6 grid grid-cols-3 gap-4">
-          <div className="rounded-xl border border-red-200 bg-red-50 p-4">
-            <div className="flex items-center gap-3">
-              <span className="text-3xl">🔴</span>
-              <div>
-                <p className="text-2xl font-bold text-red-700">
+        <div className="mb-4 grid grid-cols-3 gap-2 sm:mb-6 sm:gap-4">
+          <Card className="border-destructive/30">
+            <CardContent className="flex flex-col items-center gap-1 p-2 sm:flex-row sm:gap-4 sm:p-4">
+              <div className="rounded-lg bg-destructive/10 p-2 sm:p-3">
+                <AlertCircle className="size-4 text-destructive sm:size-6" />
+              </div>
+              <div className="text-center sm:text-left">
+                <p className="text-lg font-bold text-destructive sm:text-2xl">
                   {summary?.critical ?? 0}
                 </p>
-                <p className="text-sm text-red-600">Критичных</p>
+                <p className="text-[10px] text-muted-foreground sm:text-sm">Критичных</p>
               </div>
-            </div>
-          </div>
-          <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
-            <div className="flex items-center gap-3">
-              <span className="text-3xl">🟡</span>
-              <div>
-                <p className="text-2xl font-bold text-amber-700">
+            </CardContent>
+          </Card>
+          
+          <Card className="border-amber-500/30">
+            <CardContent className="flex flex-col items-center gap-1 p-2 sm:flex-row sm:gap-4 sm:p-4">
+              <div className="rounded-lg bg-amber-500/10 p-2 sm:p-3">
+                <AlertTriangle className="size-4 text-amber-500 sm:size-6" />
+              </div>
+              <div className="text-center sm:text-left">
+                <p className="text-lg font-bold text-amber-500 sm:text-2xl">
                   {summary?.warning ?? 0}
                 </p>
-                <p className="text-sm text-amber-600">Требуют внимания</p>
+                <p className="text-[10px] text-muted-foreground sm:text-sm">Внимание</p>
               </div>
-            </div>
-          </div>
-          <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4">
-            <div className="flex items-center gap-3">
-              <span className="text-3xl">🟢</span>
-              <div>
-                <p className="text-2xl font-bold text-emerald-700">
+            </CardContent>
+          </Card>
+          
+          <Card className="border-emerald-500/30">
+            <CardContent className="flex flex-col items-center gap-1 p-2 sm:flex-row sm:gap-4 sm:p-4">
+              <div className="rounded-lg bg-emerald-500/10 p-2 sm:p-3">
+                <CheckCircle className="size-4 text-emerald-500 sm:size-6" />
+              </div>
+              <div className="text-center sm:text-left">
+                <p className="text-lg font-bold text-emerald-500 sm:text-2xl">
                   {summary?.normal ?? 0}
                 </p>
-                <p className="text-sm text-emerald-600">В норме</p>
+                <p className="text-[10px] text-muted-foreground sm:text-sm">В норме</p>
               </div>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Основной контент */}
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <div className="grid gap-4 sm:gap-6 lg:grid-cols-2">
           {/* Левая колонка: таблица рекомендаций */}
-          <div className="lg:col-span-1">
-            <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-slate-800">
-                📦 Рекомендации к заказу
-              </h2>
-              <button className="text-sm text-blue-600 hover:text-blue-700">
-                Экспорт CSV
-              </button>
-            </div>
-            <ReorderTable
-              items={
-                recommendations?.map((r) => ({
-                  sku: r.sku,
-                  productName: r.productName,
-                  warehouse: r.warehouse,
-                  currentQty: r.currentQty,
-                  daysToStockout: r.daysToStockout,
-                  recommendedQty: r.recommendedQty,
-                  urgency: r.urgency,
-                  reasoning: r.reasoning,
-                  supplier: r.supplier,
-                })) ?? []
-              }
-              onOrderClick={handleOrderClick}
-              isLoading={loadingRecs}
-            />
+          <div className="space-y-6">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0">
+                <div>
+                  <CardTitle className="flex items-center gap-2">
+                    <TrendingUp className="size-5 text-primary" />
+                    Рекомендации к заказу
+                  </CardTitle>
+                  <CardDescription>
+                    Товары, требующие пополнения запасов
+                  </CardDescription>
+                </div>
+                <Button variant="outline" size="sm">
+                  <Download className="mr-2 size-4" />
+                  Экспорт CSV
+                </Button>
+              </CardHeader>
+              <CardContent>
+                <ReorderTable
+                  items={
+                    recommendations?.map((r) => ({
+                      sku: r.sku,
+                      productName: r.productName,
+                      warehouse: r.warehouse,
+                      currentQty: r.currentQty,
+                      daysToStockout: r.daysToStockout,
+                      recommendedQty: r.recommendedQty,
+                      urgency: r.urgency,
+                      reasoning: r.reasoning,
+                      supplier: r.supplier,
+                    })) ?? []
+                  }
+                  onOrderClick={handleOrderClick}
+                  isLoading={loadingRecs}
+                />
+              </CardContent>
+            </Card>
 
             {/* Список для выбора товара */}
-            <div className="mt-6">
-              <h3 className="mb-3 text-sm font-medium text-slate-600">
-                Выберите товар для детального прогноза:
-              </h3>
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-                {recommendations?.slice(0, 6).map((r) => (
-                  <button
-                    key={`${r.sku}-${r.warehouse}`}
-                    onClick={() => setSelectedSku(r.sku)}
-                    className={`rounded-lg border p-2 text-left text-sm transition-all ${
-                      selectedSku === r.sku
-                        ? "border-blue-500 bg-blue-50"
-                        : "border-slate-200 bg-white hover:border-blue-300"
-                    }`}
-                  >
-                    <p className="truncate font-medium text-slate-700">
-                      {r.productName}
-                    </p>
-                    <p className="font-mono text-xs text-slate-400">{r.sku}</p>
-                  </button>
-                ))}
-              </div>
-            </div>
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-sm">Выберите товар для детального прогноза</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                  {recommendations?.slice(0, 6).map((r) => (
+                    <Button
+                      key={`${r.sku}-${r.warehouse}`}
+                      variant={selectedSku === r.sku ? "default" : "outline"}
+                      className="h-auto flex-col items-start gap-1 p-3"
+                      onClick={() => setSelectedSku(r.sku)}
+                    >
+                      <span className="truncate text-sm font-medium">
+                        {r.productName}
+                      </span>
+                      <span className="font-mono text-xs text-muted-foreground">
+                        {r.sku}
+                      </span>
+                    </Button>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
           </div>
 
           {/* Правая колонка: график */}
-          <div className="lg:col-span-1">
-            <div className="rounded-xl border border-slate-200 bg-white p-4">
-              <div className="mb-4 flex items-center justify-between">
-                <h2 className="text-lg font-semibold text-slate-800">
-                  📊 Прогноз по товару
-                </h2>
+          <div className="space-y-6">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0">
+                <CardTitle className="flex items-center gap-2">
+                  <BarChart3 className="size-5 text-primary" />
+                  Прогноз по товару
+                </CardTitle>
                 {chartData && (
                   <TrendIndicator trend={chartData.trend} size="sm" />
                 )}
-              </div>
+              </CardHeader>
+              <CardContent>
+                {selectedSku && chartData ? (
+                  <>
+                    <ForecastChart
+                      data={chartData.chartData}
+                      reorderPoint={chartData.reorderPoint}
+                      currentQty={chartData.currentQty}
+                      height={280}
+                    />
 
-              {selectedSku && chartData ? (
-                <>
-                  <ForecastChart
-                    data={chartData.chartData}
-                    reorderPoint={chartData.reorderPoint}
-                    currentQty={chartData.currentQty}
-                    height={280}
-                  />
-
-                  {/* Статистика под графиком */}
-                  <div className="mt-4 grid grid-cols-2 gap-3 border-t border-slate-100 pt-4 sm:grid-cols-4">
-                    <div className="text-center">
-                      <p className="text-xs text-slate-500">Текущий остаток</p>
-                      <p className="text-lg font-semibold text-slate-800">
-                        {chartData.currentQty}
-                      </p>
+                    {/* Статистика под графиком */}
+                    <div className="mt-4 grid grid-cols-2 gap-4 border-t pt-4 sm:grid-cols-4">
+                      <div className="text-center">
+                        <p className="text-xs text-muted-foreground">Текущий остаток</p>
+                        <p className="text-lg font-semibold">
+                          {chartData.currentQty}
+                        </p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-xs text-muted-foreground">До нуля</p>
+                        <p
+                          className={`text-lg font-semibold ${
+                            chartData.daysToStockout <= 7
+                              ? "text-destructive"
+                              : chartData.daysToStockout <= 14
+                              ? "text-amber-500"
+                              : "text-emerald-500"
+                          }`}
+                        >
+                          {chartData.daysToStockout === 999
+                            ? "∞"
+                            : `${chartData.daysToStockout} дн`}
+                        </p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-xs text-muted-foreground">Расход/день</p>
+                        <p className="text-lg font-semibold">
+                          {chartData.avgDailyConsumption.toFixed(1)}
+                        </p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-xs text-muted-foreground">Точка заказа</p>
+                        <p className="text-lg font-semibold text-amber-500">
+                          {chartData.reorderPoint}
+                        </p>
+                      </div>
                     </div>
-                    <div className="text-center">
-                      <p className="text-xs text-slate-500">До нуля</p>
-                      <p
-                        className={`text-lg font-semibold ${
-                          chartData.daysToStockout <= 7
-                            ? "text-red-600"
-                            : chartData.daysToStockout <= 14
-                            ? "text-amber-600"
-                            : "text-emerald-600"
-                        }`}
-                      >
-                        {chartData.daysToStockout === 999
-                          ? "∞"
-                          : `${chartData.daysToStockout} дн`}
-                      </p>
-                    </div>
-                    <div className="text-center">
-                      <p className="text-xs text-slate-500">Расход/день</p>
-                      <p className="text-lg font-semibold text-slate-800">
-                        {chartData.avgDailyConsumption.toFixed(1)}
-                      </p>
-                    </div>
-                    <div className="text-center">
-                      <p className="text-xs text-slate-500">Точка заказа</p>
-                      <p className="text-lg font-semibold text-amber-600">
-                        {chartData.reorderPoint}
-                      </p>
-                    </div>
+                  </>
+                ) : (
+                  <div className="flex h-[280px] flex-col items-center justify-center text-muted-foreground">
+                    <BarChart3 className="mb-2 size-10" />
+                    <p>
+                      {loadingChart
+                        ? "Загрузка..."
+                        : "Выберите товар для просмотра прогноза"}
+                    </p>
                   </div>
-                </>
-              ) : (
-                <div className="flex h-[280px] flex-col items-center justify-center text-slate-400">
-                  <span className="text-4xl">📊</span>
-                  <p className="mt-2">
-                    {loadingChart
-                      ? "Загрузка..."
-                      : "Выберите товар для просмотра прогноза"}
-                  </p>
-                </div>
-              )}
-            </div>
+                )}
+              </CardContent>
+            </Card>
 
             {/* Информация о модели */}
-            <div className="mt-4 rounded-xl border border-slate-200 bg-white p-4">
-              <h3 className="mb-2 text-sm font-medium text-slate-700">
-                ℹ️ О модели прогнозирования
-              </h3>
-              <p className="text-xs text-slate-500">
-                {model === "sma" && (
-                  <>
-                    <strong>Simple Moving Average (SMA)</strong> — простое скользящее
-                    среднее за последние 7 дней. Подходит для товаров со стабильным
-                    спросом.
-                  </>
-                )}
-                {model === "ema" && (
-                  <>
-                    <strong>Exponential Moving Average (EMA)</strong> — экспоненциальное
-                    среднее, где недавние данные имеют больший вес. Лучше реагирует на
-                    изменения тренда.
-                  </>
-                )}
-              </p>
-            </div>
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="flex items-center gap-2 text-sm">
+                  <Info className="size-4" />
+                  О модели прогнозирования
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">
+                  {model === "sma" && (
+                    <>
+                      <strong className="text-foreground">Simple Moving Average (SMA)</strong> — простое скользящее
+                      среднее за последние 7 дней. Подходит для товаров со стабильным
+                      спросом.
+                    </>
+                  )}
+                  {model === "ema" && (
+                    <>
+                      <strong className="text-foreground">Exponential Moving Average (EMA)</strong> — экспоненциальное
+                      среднее, где недавние данные имеют больший вес. Лучше реагирует на
+                      изменения тренда.
+                    </>
+                  )}
+                </p>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </main>
-    </div>
+    </>
   );
 }

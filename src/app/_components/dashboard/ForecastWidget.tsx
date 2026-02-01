@@ -7,12 +7,18 @@
 
 import Link from "next/link";
 import { api } from "~/trpc/react";
+import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
+import { Skeleton } from "~/components/ui/skeleton";
+import { Badge } from "~/components/ui/badge";
+import { Button } from "~/components/ui/button";
+import { TrendingUp, ArrowRight, AlertCircle, CheckCircle } from "lucide-react";
 
 interface ForecastWidgetProps {
   warehouse?: string;
+  limit?: number;
 }
 
-export function ForecastWidget({ warehouse }: ForecastWidgetProps) {
+export function ForecastWidget({ warehouse, limit = 3 }: ForecastWidgetProps) {
   // Получаем сводку рекомендаций
   const { data: summary, isLoading } = api.forecast.getRecommendationsSummary.useQuery(
     { warehouse }
@@ -22,103 +28,107 @@ export function ForecastWidget({ warehouse }: ForecastWidgetProps) {
   const { data: topCritical } = api.forecast.getRecommendations.useQuery({
     warehouse,
     urgency: "critical",
-    limit: 3,
+    limit,
   });
 
   if (isLoading) {
     return (
-      <div className="rounded-xl border border-slate-200 bg-white p-4">
-        <div className="animate-pulse">
-          <div className="mb-3 h-5 w-32 rounded bg-slate-200" />
-          <div className="space-y-2">
-            <div className="h-12 rounded bg-slate-100" />
-            <div className="h-12 rounded bg-slate-100" />
+      <Card>
+        <CardHeader className="pb-2">
+          <Skeleton className="h-5 w-32" />
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="grid grid-cols-3 gap-2">
+            <Skeleton className="h-14" />
+            <Skeleton className="h-14" />
+            <Skeleton className="h-14" />
           </div>
-        </div>
-      </div>
+          <Skeleton className="h-16" />
+        </CardContent>
+      </Card>
     );
   }
 
   const hasCritical = (summary?.critical ?? 0) > 0;
 
   return (
-    <div
-      className={`rounded-xl border bg-white p-4 ${
-        hasCritical ? "border-red-200" : "border-slate-200"
-      }`}
-    >
+    <Card className={hasCritical ? "border-destructive/50" : ""}>
       {/* Заголовок */}
-      <div className="mb-3 flex items-center justify-between">
-        <h3 className="font-semibold text-slate-800">📈 Прогноз запасов</h3>
-        <Link
-          href="/forecast"
-          className="text-sm text-blue-600 hover:text-blue-700"
-        >
-          Подробнее →
-        </Link>
-      </div>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <CardTitle className="flex items-center gap-2 text-sm font-medium">
+          <TrendingUp className="size-4 text-primary" />
+          Прогноз запасов
+        </CardTitle>
+        <Button variant="ghost" size="sm" asChild className="h-7 px-2 text-xs">
+          <Link href="/forecast">
+            Подробнее
+            <ArrowRight className="ml-1 size-3" />
+          </Link>
+        </Button>
+      </CardHeader>
 
-      {/* Сводка по срочности */}
-      <div className="mb-4 grid grid-cols-3 gap-2">
-        <div className="rounded-lg bg-red-50 p-2 text-center">
-          <p className="text-lg font-bold text-red-700">{summary?.critical ?? 0}</p>
-          <p className="text-xs text-red-600">Критично</p>
+      <CardContent className="space-y-4">
+        {/* Сводка по срочности */}
+        <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
+          <div className="rounded-lg border border-destructive/20 bg-destructive/10 p-1.5 text-center sm:p-2">
+            <p className="text-base font-bold text-destructive sm:text-lg">{summary?.critical ?? 0}</p>
+            <p className="text-[10px] text-destructive/70 sm:text-xs">Критично</p>
+          </div>
+          <div className="rounded-lg border border-amber-500/20 bg-amber-500/10 p-1.5 text-center sm:p-2">
+            <p className="text-base font-bold text-amber-400 sm:text-lg">{summary?.warning ?? 0}</p>
+            <p className="text-[10px] text-amber-400/70 sm:text-xs">Внимание</p>
+          </div>
+          <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/10 p-1.5 text-center sm:p-2">
+            <p className="text-base font-bold text-emerald-400 sm:text-lg">{summary?.normal ?? 0}</p>
+            <p className="text-[10px] text-emerald-400/70 sm:text-xs">Норма</p>
+          </div>
         </div>
-        <div className="rounded-lg bg-amber-50 p-2 text-center">
-          <p className="text-lg font-bold text-amber-700">{summary?.warning ?? 0}</p>
-          <p className="text-xs text-amber-600">Внимание</p>
-        </div>
-        <div className="rounded-lg bg-emerald-50 p-2 text-center">
-          <p className="text-lg font-bold text-emerald-700">{summary?.normal ?? 0}</p>
-          <p className="text-xs text-emerald-600">Норма</p>
-        </div>
-      </div>
 
-      {/* Критичные товары */}
-      {topCritical && topCritical.length > 0 ? (
-        <div className="space-y-2">
-          <p className="text-xs font-medium text-slate-500">
-            🚨 Требуют срочного заказа:
-          </p>
-          {topCritical.map((item) => (
-            <div
-              key={`${item.sku}-${item.warehouse}`}
-              className="flex items-center justify-between rounded-lg bg-red-50 px-3 py-2"
-            >
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium text-red-800">
-                  {item.productName}
-                </p>
-                <p className="text-xs text-red-600">
-                  Остаток: {item.currentQty} · До 0: {item.daysToStockout} дн
-                </p>
+        {/* Критичные товары */}
+        {topCritical && topCritical.length > 0 ? (
+          <div className="space-y-2">
+            <p className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+              <AlertCircle className="size-3" />
+              Требуют срочного заказа:
+            </p>
+            {topCritical.map((item) => (
+              <div
+                key={`${item.sku}-${item.warehouse}`}
+                className="flex items-center justify-between rounded-lg border border-destructive/20 bg-destructive/5 px-3 py-2"
+              >
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-medium">
+                    {item.productName}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Остаток: {item.currentQty} · До 0: {item.daysToStockout} дн
+                  </p>
+                </div>
+                <Badge variant="destructive" className="ml-2">
+                  +{item.recommendedQty}
+                </Badge>
               </div>
-              <span className="ml-2 whitespace-nowrap text-sm font-semibold text-red-700">
-                +{item.recommendedQty}
-              </span>
-            </div>
-          ))}
-        </div>
-      ) : (
-        <div className="rounded-lg bg-emerald-50 p-3 text-center">
-          <span className="text-2xl">✅</span>
-          <p className="mt-1 text-sm text-emerald-700">
-            Нет критичных товаров
-          </p>
-        </div>
-      )}
+            ))}
+          </div>
+        ) : (
+          <div className="flex flex-col items-center gap-2 rounded-lg border border-emerald-500/20 bg-emerald-500/10 p-4">
+            <CheckCircle className="size-8 text-emerald-500" />
+            <p className="text-sm text-emerald-400">Нет критичных товаров</p>
+          </div>
+        )}
 
-      {/* Общая сумма рекомендаций */}
-      {(summary?.totalRecommendedQty ?? 0) > 0 && (
-        <div className="mt-3 border-t border-slate-100 pt-3 text-center">
-          <p className="text-xs text-slate-500">
-            Всего рекомендовано заказать:{" "}
-            <span className="font-semibold text-slate-700">
-              {summary?.totalRecommendedQty} шт
-            </span>
-          </p>
-        </div>
-      )}
-    </div>
+        {/* Общая сумма рекомендаций */}
+        {(summary?.totalRecommendedQty ?? 0) > 0 && (
+          <div className="border-t pt-3 text-center">
+            <p className="text-xs text-muted-foreground">
+              Всего рекомендовано заказать:{" "}
+              <span className="font-semibold text-foreground">
+                {summary?.totalRecommendedQty} шт
+              </span>
+            </p>
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 }

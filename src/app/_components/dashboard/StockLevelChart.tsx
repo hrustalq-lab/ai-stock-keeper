@@ -14,6 +14,10 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { api } from "~/trpc/react";
+import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
+import { Skeleton } from "~/components/ui/skeleton";
+import { Badge } from "~/components/ui/badge";
+import { BarChart3 } from "lucide-react";
 
 interface StockLevelChartProps {
   warehouse?: string;
@@ -35,10 +39,14 @@ export function StockLevelChart({
 
   if (isLoading) {
     return (
-      <div className="rounded-xl border border-zinc-700/50 bg-zinc-800/30 p-4">
-        <div className="mb-4 h-5 w-48 animate-pulse rounded bg-zinc-700" />
-        <div className="h-[250px] animate-pulse rounded bg-zinc-700/50" />
-      </div>
+      <Card>
+        <CardHeader className="pb-2">
+          <Skeleton className="h-5 w-40" />
+        </CardHeader>
+        <CardContent>
+          <Skeleton className="h-[180px] sm:h-[250px]" />
+        </CardContent>
+      </Card>
     );
   }
 
@@ -49,39 +57,38 @@ export function StockLevelChart({
       : generateMockData(days);
 
   return (
-    <div className="rounded-xl border border-zinc-700/50 bg-zinc-800/30">
-      <div className="border-b border-zinc-700/50 px-4 py-3">
-        <h3 className="flex items-center gap-2 font-semibold text-white">
-          <span>📈</span>
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <CardTitle className="flex items-center gap-2 text-sm font-medium">
+          <BarChart3 className="size-4 text-primary" />
           Уровень запасов
-          <span className="ml-auto text-xs font-normal text-zinc-500">
-            {days} дней
-          </span>
-        </h3>
-      </div>
+        </CardTitle>
+        <Badge variant="outline">{days} дней</Badge>
+      </CardHeader>
 
-      <div className="p-4">
-        <ResponsiveContainer width="100%" height={250}>
-          <AreaChart
-            data={chartData}
-            margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
-          >
+      <CardContent className="pt-2 sm:pt-4">
+        <div className="h-[180px] sm:h-[250px]">
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart
+              data={chartData}
+              margin={{ top: 10, right: 5, left: -10, bottom: 0 }}
+            >
             <defs>
               <linearGradient id="stockGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.3} />
-                <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0} />
+                <stop offset="5%" stopColor="oklch(0.75 0.15 195)" stopOpacity={0.3} />
+                <stop offset="95%" stopColor="oklch(0.75 0.15 195)" stopOpacity={0} />
               </linearGradient>
             </defs>
             <CartesianGrid
               strokeDasharray="3 3"
-              stroke="#374151"
+              stroke="oklch(0.28 0.005 285)"
               vertical={false}
             />
             <XAxis
               dataKey="date"
-              tick={{ fill: "#9ca3af", fontSize: 12 }}
+              tick={{ fill: "oklch(0.65 0.01 285)", fontSize: 10 }}
               tickLine={false}
-              axisLine={{ stroke: "#374151" }}
+              axisLine={{ stroke: "oklch(0.28 0.005 285)" }}
               tickFormatter={(value: string) => {
                 const date = new Date(value);
                 return date.toLocaleDateString("ru-RU", {
@@ -89,19 +96,20 @@ export function StockLevelChart({
                   month: "short",
                 });
               }}
+              interval="preserveStartEnd"
             />
             <YAxis
-              tick={{ fill: "#9ca3af", fontSize: 12 }}
+              tick={{ fill: "oklch(0.65 0.01 285)", fontSize: 10 }}
               tickLine={false}
               axisLine={false}
-              width={50}
+              width={35}
             />
             <Tooltip
               contentStyle={{
-                backgroundColor: "#1f2937",
-                border: "1px solid #374151",
+                backgroundColor: "oklch(0.16 0.005 285)",
+                border: "1px solid oklch(0.28 0.005 285)",
                 borderRadius: "8px",
-                color: "#fff",
+                color: "oklch(0.98 0 0)",
               }}
               labelFormatter={(value) => {
                 const date = new Date(String(value));
@@ -119,14 +127,15 @@ export function StockLevelChart({
             <Area
               type="monotone"
               dataKey="quantity"
-              stroke="#8b5cf6"
+              stroke="oklch(0.75 0.15 195)"
               strokeWidth={2}
               fill="url(#stockGradient)"
             />
           </AreaChart>
-        </ResponsiveContainer>
-      </div>
-    </div>
+          </ResponsiveContainer>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 

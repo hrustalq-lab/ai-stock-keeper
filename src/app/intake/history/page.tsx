@@ -1,14 +1,45 @@
 "use client";
 
 import { useState, useCallback, useMemo } from "react";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { api } from "~/trpc/react";
+import { PageHeader } from "~/components/page-header";
+import { Button } from "~/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
+import { Badge } from "~/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "~/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "~/components/ui/table";
+import {
+  Plus,
+  Package,
+  Clock,
+  CheckCircle,
+  XCircle,
+  Loader2,
+  History,
+  ChevronLeft,
+  ChevronRight,
+  Inbox,
+} from "lucide-react";
 
 /**
  * Доступные склады (TODO: получать из API)
  */
 const WAREHOUSES = [
-  { id: "", name: "Все склады" },
+  { id: "all", name: "Все склады" },
   { id: "warehouse_main", name: "Основной склад" },
   { id: "warehouse_reserve", name: "Резервный склад" },
   { id: "warehouse_retail", name: "Розничный склад" },
@@ -28,10 +59,8 @@ const PERIODS = [
  * Страница истории приёмок
  */
 export default function IntakeHistoryPage() {
-  const router = useRouter();
-
   // Фильтры
-  const [warehouse, setWarehouse] = useState("");
+  const [warehouse, setWarehouse] = useState("all");
   const [periodDays, setPeriodDays] = useState(30);
 
   // Пагинация
@@ -47,22 +76,18 @@ export default function IntakeHistoryPage() {
 
   // API запросы
   const historyQuery = api.intake.getHistory.useQuery({
-    warehouse: warehouse || undefined,
+    warehouse: warehouse === "all" ? undefined : warehouse,
     fromDate,
     limit,
     offset,
   });
 
   const statsQuery = api.intake.getStats.useQuery({
-    warehouse: warehouse || undefined,
+    warehouse: warehouse === "all" ? undefined : warehouse,
     days: periodDays,
   });
 
-  // Навигация
-  const handleNewIntake = useCallback(() => {
-    router.push("/intake");
-  }, [router]);
-
+  // Пагинация
   const handleNextPage = useCallback(() => {
     setOffset((prev) => prev + limit);
   }, []);
@@ -93,274 +118,283 @@ export default function IntakeHistoryPage() {
     });
   };
 
-  // Получение цвета статуса
-  const getStatusColor = (status: string) => {
+  // Получение бейджа статуса
+  const getStatusBadge = (status: string) => {
     switch (status) {
       case "completed":
-        return "bg-emerald-500/20 text-emerald-400";
+        return (
+          <Badge variant="default" className="bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30">
+            <CheckCircle className="mr-1 size-3" />
+            Завершено
+          </Badge>
+        );
       case "pending":
-        return "bg-yellow-500/20 text-yellow-400";
+        return (
+          <Badge variant="secondary" className="bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/30">
+            <Clock className="mr-1 size-3" />
+            В обработке
+          </Badge>
+        );
       case "failed":
-        return "bg-red-500/20 text-red-400";
+        return (
+          <Badge variant="destructive" className="bg-red-500/20 text-red-400 hover:bg-red-500/30">
+            <XCircle className="mr-1 size-3" />
+            Ошибка
+          </Badge>
+        );
       default:
-        return "bg-slate-500/20 text-slate-400";
+        return (
+          <Badge variant="outline">
+            {status}
+          </Badge>
+        );
     }
   };
 
+  // Получение названия склада
+  const getWarehouseName = (warehouseId: string) => {
+    return WAREHOUSES.find((wh) => wh.id === warehouseId)?.name ?? warehouseId;
+  };
+
+  const stats = statsQuery.data?.success ? statsQuery.data.data : null;
+  const history = historyQuery.data?.success ? historyQuery.data.data : null;
+
   return (
-    <div className="min-h-screen bg-linear-to-br from-slate-950 via-slate-900 to-slate-950">
+    <>
       {/* Header */}
-      <header className="border-b border-slate-800 bg-slate-900/50 backdrop-blur-xl">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4">
-          <div className="flex items-center gap-3">
-            <button
-              onClick={handleNewIntake}
-              className="rounded-lg p-2 text-slate-400 transition hover:bg-slate-800 hover:text-white"
-            >
-              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M10 19l-7-7m0 0l7-7m-7 7h18"
-                />
-              </svg>
-            </button>
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-linear-to-br from-violet-500 to-purple-500">
-              <svg
-                className="h-6 w-6 text-white"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-            </div>
-            <div>
-              <h1 className="text-lg font-bold text-white">История приёмок</h1>
-              <p className="text-xs text-slate-500">AI Stock Keeper</p>
-            </div>
-          </div>
+      <PageHeader
+        title="История приёмок"
+        description="Журнал всех операций приёмки товаров"
+        breadcrumbs={[
+          { label: "Приёмка", href: "/intake" },
+          { label: "История" },
+        ]}
+        actions={
+          <Button asChild size="sm">
+            <Link href="/intake">
+              <Plus className="mr-2 size-4" />
+              Новая приёмка
+            </Link>
+          </Button>
+        }
+      />
 
-          <button
-            onClick={handleNewIntake}
-            className="flex items-center gap-2 rounded-xl bg-linear-to-r from-cyan-500 to-emerald-500 px-4 py-2 text-sm font-medium text-white shadow-lg shadow-cyan-500/25 transition hover:shadow-cyan-500/40"
-          >
-            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 4v16m8-8H4"
-              />
-            </svg>
-            Новая приёмка
-          </button>
-        </div>
-      </header>
-
-      <main className="mx-auto max-w-6xl px-4 py-6">
+      <main className="flex-1 space-y-4 p-4 md:space-y-6 md:p-6">
         {/* Статистика */}
-        {statsQuery.data?.success && statsQuery.data.data && (
-          <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <div className="rounded-xl border border-slate-700 bg-slate-900/50 p-4">
-              <p className="text-sm text-slate-500">Приёмок за период</p>
-              <p className="mt-1 text-2xl font-bold text-white">
-                {statsQuery.data.data.receiptsCount}
-              </p>
-            </div>
-            <div className="rounded-xl border border-slate-700 bg-slate-900/50 p-4">
-              <p className="text-sm text-slate-500">Принято товаров</p>
-              <p className="mt-1 text-2xl font-bold text-emerald-400">
-                +{statsQuery.data.data.totalItemsReceived}
-              </p>
-            </div>
-            <div className="rounded-xl border border-slate-700 bg-slate-900/50 p-4">
-              <p className="text-sm text-slate-500">Уникальных SKU</p>
-              <p className="mt-1 text-2xl font-bold text-cyan-400">
-                {statsQuery.data.data.uniqueSkusReceived}
-              </p>
-            </div>
-            <div className="rounded-xl border border-slate-700 bg-slate-900/50 p-4">
-              <p className="text-sm text-slate-500">Последняя приёмка</p>
-              <p className="mt-1 text-lg font-medium text-slate-300">
-                {statsQuery.data.data.lastReceiptDate
-                  ? formatDate(new Date(statsQuery.data.data.lastReceiptDate))
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">
+                Приёмок за период
+              </CardTitle>
+              <History className="size-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {stats?.receiptsCount ?? 0}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">
+                Принято товаров
+              </CardTitle>
+              <Package className="size-4 text-emerald-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-emerald-500">
+                +{stats?.totalItemsReceived ?? 0}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">
+                Уникальных SKU
+              </CardTitle>
+              <Package className="size-4 text-primary" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-primary">
+                {stats?.uniqueSkusReceived ?? 0}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">
+                Последняя приёмка
+              </CardTitle>
+              <Clock className="size-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-base font-medium">
+                {stats?.lastReceiptDate
+                  ? formatDate(new Date(stats.lastReceiptDate))
                   : "—"}
-              </p>
-            </div>
-          </div>
-        )}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
 
         {/* Фильтры */}
-        <div className="mb-6 flex flex-wrap items-center gap-4">
+        <div className="flex flex-wrap items-end gap-4">
           {/* Склад */}
-          <div>
-            <label className="mb-1 block text-xs text-slate-500">Склад</label>
-            <select
-              value={warehouse}
-              onChange={(e) => handleWarehouseChange(e.target.value)}
-              className="rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-white focus:border-cyan-500 focus:outline-none"
-            >
-              {WAREHOUSES.map((wh) => (
-                <option key={wh.id} value={wh.id}>
-                  {wh.name}
-                </option>
-              ))}
-            </select>
+          <div className="space-y-1">
+            <label className="text-xs text-muted-foreground">Склад</label>
+            <Select value={warehouse} onValueChange={handleWarehouseChange}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Выберите склад" />
+              </SelectTrigger>
+              <SelectContent>
+                {WAREHOUSES.map((wh) => (
+                  <SelectItem key={wh.id} value={wh.id}>
+                    {wh.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           {/* Период */}
-          <div>
-            <label className="mb-1 block text-xs text-slate-500">Период</label>
+          <div className="space-y-1">
+            <label className="text-xs text-muted-foreground">Период</label>
             <div className="flex gap-1">
               {PERIODS.map((p) => (
-                <button
+                <Button
                   key={p.days}
+                  variant={periodDays === p.days ? "default" : "outline"}
+                  size="sm"
                   onClick={() => handlePeriodChange(p.days)}
-                  className={`rounded-lg px-3 py-2 text-sm transition ${
-                    periodDays === p.days
-                      ? "bg-cyan-500/20 text-cyan-400"
-                      : "bg-slate-800 text-slate-400 hover:bg-slate-700"
-                  }`}
                 >
                   {p.label}
-                </button>
+                </Button>
               ))}
             </div>
           </div>
         </div>
 
         {/* Таблица */}
-        <div className="overflow-hidden rounded-xl border border-slate-700 bg-slate-900/50">
-          {/* Заголовок */}
-          <div className="grid grid-cols-12 gap-4 border-b border-slate-700 bg-slate-800/50 px-4 py-3 text-xs font-medium uppercase tracking-wider text-slate-500">
-            <div className="col-span-2">Документ</div>
-            <div className="col-span-3">Дата</div>
-            <div className="col-span-2">Склад</div>
-            <div className="col-span-2 text-right">Позиций</div>
-            <div className="col-span-2 text-right">Количество</div>
-            <div className="col-span-1 text-center">Статус</div>
-          </div>
+        <div className="overflow-hidden rounded-xl border bg-card">
+          <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Документ</TableHead>
+                  <TableHead>Дата</TableHead>
+                  <TableHead className="hidden sm:table-cell">Склад</TableHead>
+                  <TableHead className="text-right">Позиций</TableHead>
+                  <TableHead className="text-right">Кол-во</TableHead>
+                  <TableHead className="hidden sm:table-cell">Статус</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {/* Загрузка */}
+                {historyQuery.isLoading && (
+                  <TableRow>
+                    <TableCell colSpan={6} className="h-32 text-center">
+                      <div className="flex items-center justify-center gap-2">
+                        <Loader2 className="size-4 animate-spin" />
+                        <span className="text-muted-foreground">Загрузка...</span>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                )}
 
-          {/* Загрузка */}
-          {historyQuery.isLoading && (
-            <div className="flex items-center justify-center py-12">
-              <div className="h-8 w-8 animate-spin rounded-full border-4 border-cyan-400 border-t-transparent" />
+                {/* Ошибка */}
+                {historyQuery.error && (
+                  <TableRow>
+                    <TableCell colSpan={6} className="h-32 text-center">
+                      <div className="text-destructive">
+                        Ошибка загрузки: {historyQuery.error.message}
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                )}
+
+                {/* Пустой список */}
+                {history?.receipts.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={6} className="h-32 text-center">
+                      <div className="flex flex-col items-center gap-3">
+                        <Inbox className="size-10 text-muted-foreground" />
+                        <p className="text-muted-foreground">
+                          Нет приёмок за выбранный период
+                        </p>
+                        <Button asChild variant="outline" size="sm">
+                          <Link href="/intake">
+                            <Plus className="mr-2 size-4" />
+                            Создать приёмку
+                          </Link>
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                )}
+
+                {/* Список */}
+                {history?.receipts.map((receipt) => (
+                  <TableRow key={receipt.id}>
+                    <TableCell>
+                      <code className="rounded bg-muted px-2 py-1 font-mono text-sm text-primary">
+                        {receipt.docNumber ?? `#${receipt.id}`}
+                      </code>
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {receipt.docDate ? formatDate(receipt.docDate) : "—"}
+                    </TableCell>
+                    <TableCell className="hidden text-muted-foreground sm:table-cell">
+                      {getWarehouseName(receipt.warehouse ?? "")}
+                    </TableCell>
+                    <TableCell className="text-right font-mono">
+                      {receipt.itemsCount}
+                    </TableCell>
+                    <TableCell className="text-right font-mono font-medium text-emerald-500">
+                      +{receipt.totalQuantity}
+                    </TableCell>
+                    <TableCell className="hidden sm:table-cell">
+                      {getStatusBadge(receipt.status ?? "pending")}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+
+          {/* Пагинация */}
+          {history && history.totalCount > limit && (
+            <div className="flex items-center justify-between border-t px-4 py-3">
+              <p className="text-sm text-muted-foreground">
+                Показано {offset + 1} –{" "}
+                {Math.min(offset + limit, history.totalCount)} из{" "}
+                {history.totalCount}
+              </p>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handlePrevPage}
+                  disabled={offset === 0}
+                >
+                  <ChevronLeft className="mr-1 size-4" />
+                  Назад
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleNextPage}
+                  disabled={!history.hasMore}
+                >
+                  Вперёд
+                  <ChevronRight className="ml-1 size-4" />
+                </Button>
+              </div>
             </div>
           )}
-
-          {/* Ошибка */}
-          {historyQuery.error && (
-            <div className="px-4 py-8 text-center text-red-400">
-              Ошибка загрузки: {historyQuery.error.message}
-            </div>
-          )}
-
-          {/* Пустой список */}
-          {historyQuery.data?.success &&
-            historyQuery.data.data.receipts.length === 0 && (
-              <div className="flex flex-col items-center justify-center py-12">
-                <svg
-                  className="mb-3 h-12 w-12 text-slate-600"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={1.5}
-                    d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"
-                  />
-                </svg>
-                <p className="text-slate-500">Нет приёмок за выбранный период</p>
-                <button
-                  onClick={handleNewIntake}
-                  className="mt-4 rounded-lg bg-cyan-500/20 px-4 py-2 text-cyan-400 transition hover:bg-cyan-500/30"
-                >
-                  Создать первую приёмку
-                </button>
-              </div>
-            )}
-
-          {/* Список */}
-          {historyQuery.data?.success &&
-            historyQuery.data.data.receipts.map((receipt) => (
-              <div
-                key={receipt.id}
-                className="grid grid-cols-12 gap-4 border-b border-slate-800 px-4 py-4 transition hover:bg-slate-800/30"
-              >
-                <div className="col-span-2">
-                  <code className="rounded bg-slate-800 px-2 py-1 font-mono text-sm text-cyan-400">
-                    {receipt.docNumber ?? `#${receipt.id}`}
-                  </code>
-                </div>
-                <div className="col-span-3 text-sm text-slate-300">
-                  {receipt.docDate ? formatDate(receipt.docDate) : "—"}
-                </div>
-                <div className="col-span-2 text-sm text-slate-400">
-                  {receipt.warehouse === "warehouse_main"
-                    ? "Основной"
-                    : receipt.warehouse === "warehouse_reserve"
-                      ? "Резервный"
-                      : receipt.warehouse === "warehouse_retail"
-                        ? "Розничный"
-                        : receipt.warehouse}
-                </div>
-                <div className="col-span-2 text-right font-mono text-sm text-slate-300">
-                  {receipt.itemsCount}
-                </div>
-                <div className="col-span-2 text-right font-mono text-sm font-medium text-emerald-400">
-                  +{receipt.totalQuantity}
-                </div>
-                <div className="col-span-1 text-center">
-                  <span
-                    className={`inline-block rounded-full px-2 py-0.5 text-xs ${getStatusColor(receipt.status ?? "pending")}`}
-                  >
-                    {receipt.status === "completed"
-                      ? "✓"
-                      : receipt.status === "pending"
-                        ? "⏳"
-                        : "✗"}
-                  </span>
-                </div>
-              </div>
-            ))}
         </div>
-
-        {/* Пагинация */}
-        {historyQuery.data?.success && historyQuery.data.data.totalCount > limit && (
-          <div className="mt-4 flex items-center justify-between">
-            <p className="text-sm text-slate-500">
-              Показано {offset + 1} -{" "}
-              {Math.min(offset + limit, historyQuery.data.data.totalCount)} из{" "}
-              {historyQuery.data.data.totalCount}
-            </p>
-            <div className="flex gap-2">
-              <button
-                onClick={handlePrevPage}
-                disabled={offset === 0}
-                className="rounded-lg border border-slate-700 bg-slate-800 px-4 py-2 text-sm text-slate-300 transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                ← Назад
-              </button>
-              <button
-                onClick={handleNextPage}
-                disabled={!historyQuery.data.data.hasMore}
-                className="rounded-lg border border-slate-700 bg-slate-800 px-4 py-2 text-sm text-slate-300 transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                Вперёд →
-              </button>
-            </div>
-          </div>
-        )}
       </main>
-    </div>
+    </>
   );
 }

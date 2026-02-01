@@ -83,8 +83,9 @@ COPY --from=builder /app/package.json ./package.json
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
-# Копируем Prisma
+# Копируем Prisma (schema + config)
 COPY --from=builder /app/prisma ./prisma
+COPY --from=builder /app/prisma.config.ts ./prisma.config.ts
 
 # Копируем скомпилированный worker
 COPY --from=builder --chown=nextjs:nodejs /app/dist/worker.cjs ./worker.cjs

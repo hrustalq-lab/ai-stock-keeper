@@ -52,7 +52,8 @@ ENV NEXT_TELEMETRY_DISABLED=1
 RUN npm run build
 
 # Компилируем worker в JavaScript (bundle для production)
-RUN npx esbuild scripts/worker.ts --bundle --platform=node --target=node20 --outfile=dist/worker.js \
+# Используем .cjs т.к. package.json имеет "type": "module"
+RUN npx esbuild scripts/worker.ts --bundle --platform=node --target=node20 --outfile=dist/worker.cjs \
     --external:@prisma/client --external:pg --external:ioredis
 
 # ============================================
@@ -81,7 +82,7 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY --from=builder /app/prisma ./prisma
 
 # Копируем скомпилированный worker
-COPY --from=builder --chown=nextjs:nodejs /app/dist/worker.js ./worker.js
+COPY --from=builder --chown=nextjs:nodejs /app/dist/worker.cjs ./worker.cjs
 
 # Копируем production node_modules (для worker: pg, ioredis, prisma)
 COPY --from=deps-prod /app/node_modules ./node_modules

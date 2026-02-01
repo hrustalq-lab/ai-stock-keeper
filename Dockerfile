@@ -1,6 +1,7 @@
+# syntax=docker/dockerfile:1.4
 # ============================================
 # AI Stock Keeper - Production Dockerfile
-# Multi-stage build для оптимального размера образа
+# Multi-stage build с оптимизированным кешированием
 # ============================================
 
 # ============================================
@@ -15,8 +16,9 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 COPY prisma ./prisma/
 
-# Устанавливаем все зависимости
-RUN npm ci --legacy-peer-deps
+# Устанавливаем все зависимости с кешированием npm
+RUN --mount=type=cache,target=/root/.npm \
+    npm ci --legacy-peer-deps
 
 # ============================================
 # Stage 2: Production Dependencies
@@ -29,8 +31,9 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 COPY prisma ./prisma/
 
-# Устанавливаем только production зависимости
-RUN npm ci --legacy-peer-deps --omit=dev
+# Устанавливаем только production зависимости с кешированием npm
+RUN --mount=type=cache,target=/root/.npm \
+    npm ci --legacy-peer-deps --omit=dev
 
 # ============================================
 # Stage 3: Builder
@@ -49,7 +52,9 @@ RUN npx prisma generate
 ENV SKIP_ENV_VALIDATION=true
 ENV NEXT_TELEMETRY_DISABLED=1
 
-RUN npm run build
+# Кешируем Next.js build cache
+RUN --mount=type=cache,target=/app/.next/cache \
+    npm run build
 
 # Компилируем worker в JavaScript (bundle для production)
 # Используем .cjs т.к. package.json имеет "type": "module"
@@ -64,8 +69,8 @@ FROM node:20-alpine AS runner
 WORKDIR /app
 
 # Создаём non-root пользователя
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nextjs
+RUN addgroup --system --gid 1001 nodejs && \
+    adduser --system --uid 1001 nextjs
 
 # Устанавливаем runtime зависимости
 RUN apk add --no-cache openssl

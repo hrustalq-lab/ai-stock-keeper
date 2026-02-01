@@ -105,18 +105,75 @@ jobs:
 
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.0.3
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          REDIS_URL: ${{ secrets.REDIS_URL }}
+          ONE_C_BASE_URL: ${{ secrets.ONE_C_BASE_URL }}
+          ONE_C_USERNAME: ${{ secrets.ONE_C_USERNAME }}
+          ONE_C_PASSWORD: ${{ secrets.ONE_C_PASSWORD }}
+          ONE_C_WAREHOUSE_ID: ${{ secrets.ONE_C_WAREHOUSE_ID }}
+          ONE_C_WEBHOOK_SECRET: ${{ secrets.ONE_C_WEBHOOK_SECRET }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USERNAME }}
           key: ${{ secrets.VPS_SSH_KEY }}
           port: ${{ secrets.VPS_SSH_PORT }}
+          envs: DATABASE_URL,REDIS_URL,ONE_C_BASE_URL,ONE_C_USERNAME,ONE_C_PASSWORD,ONE_C_WAREHOUSE_ID,ONE_C_WEBHOOK_SECRET,RESEND_API_KEY
           script: |
             set -e
             
             echo "🚀 Deploying to PRODUCTION: ai-stock-keeper.hrustalq.dev"
             
             # Переходим в директорию проекта
-            cd ${{ secrets.PROJECT_PATH_PROD || '/opt/ai-stock-keeper' }}
+            cd ${{ secrets.PROJECT_PATH_PROD }}
+            
+            # Создаём/обновляем .env из GitHub Secrets
+            cat > .env << EOF
+            # ============================================
+            # AI Stock Keeper - PRODUCTION (auto-generated)
+            # ============================================
+            NODE_ENV=production
+            APP_VERSION=${{ needs.build.outputs.version }}
+            
+            # Database
+            DATABASE_URL="${DATABASE_URL}"
+            
+            # Redis
+            REDIS_URL="${REDIS_URL}"
+            
+            # 1C Configuration
+            ONE_C_BASE_URL="${ONE_C_BASE_URL}"
+            ONE_C_USERNAME="${ONE_C_USERNAME}"
+            ONE_C_PASSWORD="${ONE_C_PASSWORD}"
+            ONE_C_WAREHOUSE_ID="${ONE_C_WAREHOUSE_ID}"
+            ONE_C_WEBHOOK_SECRET="${ONE_C_WEBHOOK_SECRET}"
+            ONE_C_AUTO_CREATE_SHIPMENT=true
+            
+            # Bull Queue
+            BULL_QUEUE_NAME=1c-sync-queue-prod
+            
+            # Email
+            RESEND_API_KEY="${RESEND_API_KEY}"
+            RESEND_FROM_EMAIL=alerts@hrustalq.dev
+            
+            # Alert Settings
+            ALERT_DEFAULT_COOLDOWN_MINS=60
+            
+            # Forecasting
+            FORECAST_DEFAULT_HISTORY_DAYS=60
+            FORECAST_DEFAULT_PERIODS=14
+            REORDER_DEFAULT_LEAD_TIME_DAYS=7
+            REORDER_DEFAULT_SERVICE_LEVEL=0.95
+            
+            # Picking
+            ROUTE_OPTIMIZATION_ALGORITHM=nearest_neighbor
+            WAREHOUSE_WALKING_SPEED_MPS=1.4
+            WAREHOUSE_PICK_TIME_SECONDS=15
+            EOF
+            
+            chmod 600 .env
+            echo "✅ .env updated from GitHub Secrets"
             
             # Логинимся в GitHub Container Registry
             echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
@@ -167,18 +224,75 @@ jobs:
 
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.0.3
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          REDIS_URL: ${{ secrets.REDIS_URL }}
+          ONE_C_BASE_URL: ${{ secrets.ONE_C_BASE_URL }}
+          ONE_C_USERNAME: ${{ secrets.ONE_C_USERNAME }}
+          ONE_C_PASSWORD: ${{ secrets.ONE_C_PASSWORD }}
+          ONE_C_WAREHOUSE_ID: ${{ secrets.ONE_C_WAREHOUSE_ID }}
+          ONE_C_WEBHOOK_SECRET: ${{ secrets.ONE_C_WEBHOOK_SECRET }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USERNAME }}
           key: ${{ secrets.VPS_SSH_KEY }}
           port: ${{ secrets.VPS_SSH_PORT }}
+          envs: DATABASE_URL,REDIS_URL,ONE_C_BASE_URL,ONE_C_USERNAME,ONE_C_PASSWORD,ONE_C_WAREHOUSE_ID,ONE_C_WEBHOOK_SECRET,RESEND_API_KEY
           script: |
             set -e
             
             echo "🚀 Deploying to DEVELOPMENT: ai-stock-keeper-dev.hrustalq.dev"
             
             # Переходим в директорию проекта
-            cd ${{ secrets.PROJECT_PATH_DEV || '/opt/ai-stock-keeper-dev' }}
+            cd ${{ secrets.PROJECT_PATH_DEV }}
+            
+            # Создаём/обновляем .env из GitHub Secrets
+            cat > .env << EOF
+            # ============================================
+            # AI Stock Keeper - DEVELOPMENT (auto-generated)
+            # ============================================
+            NODE_ENV=production
+            APP_VERSION=dev
+            
+            # Database
+            DATABASE_URL="${DATABASE_URL}"
+            
+            # Redis
+            REDIS_URL="${REDIS_URL}"
+            
+            # 1C Configuration
+            ONE_C_BASE_URL="${ONE_C_BASE_URL}"
+            ONE_C_USERNAME="${ONE_C_USERNAME}"
+            ONE_C_PASSWORD="${ONE_C_PASSWORD}"
+            ONE_C_WAREHOUSE_ID="${ONE_C_WAREHOUSE_ID}"
+            ONE_C_WEBHOOK_SECRET="${ONE_C_WEBHOOK_SECRET}"
+            ONE_C_AUTO_CREATE_SHIPMENT=false
+            
+            # Bull Queue
+            BULL_QUEUE_NAME=1c-sync-queue-dev
+            
+            # Email (disabled)
+            RESEND_API_KEY="${RESEND_API_KEY}"
+            RESEND_FROM_EMAIL=alerts-dev@hrustalq.dev
+            
+            # Alert Settings (faster for testing)
+            ALERT_DEFAULT_COOLDOWN_MINS=5
+            
+            # Forecasting
+            FORECAST_DEFAULT_HISTORY_DAYS=60
+            FORECAST_DEFAULT_PERIODS=14
+            REORDER_DEFAULT_LEAD_TIME_DAYS=7
+            REORDER_DEFAULT_SERVICE_LEVEL=0.95
+            
+            # Picking
+            ROUTE_OPTIMIZATION_ALGORITHM=nearest_neighbor
+            WAREHOUSE_WALKING_SPEED_MPS=1.4
+            WAREHOUSE_PICK_TIME_SECONDS=15
+            EOF
+            
+            chmod 600 .env
+            echo "✅ .env updated from GitHub Secrets"
             
             # Логинимся в GitHub Container Registry
             echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin

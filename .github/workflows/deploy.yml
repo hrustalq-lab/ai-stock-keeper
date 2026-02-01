@@ -353,8 +353,9 @@ jobs:
       - name: Deployment Summary
         env:
           BUILD_VERSION: ${{ needs.build.outputs.version || 'unknown' }}
-          PROD_RESULT: ${{ needs.deploy-production.result }}
-          DEV_RESULT: ${{ needs.deploy-development.result }}
+          # Добавляем fallback для пропущенных джоб (защита от undefined поведения)
+          PROD_RESULT: ${{ needs.deploy-production.result || 'skipped' }}
+          DEV_RESULT: ${{ needs.deploy-development.result || 'skipped' }}
         run: |
           echo "📊 Deployment Summary"
           echo "====================="

@@ -49,3 +49,9 @@ yarn-error.log*
 
 # tesseract.js language data (downloaded automatically)
 *.traineddata
+
+# nginx (ssl certs and logs are local)
+nginx/ssl/*
+!nginx/ssl/.gitkeep
+nginx/logs/*
+!nginx/logs/.gitkeep

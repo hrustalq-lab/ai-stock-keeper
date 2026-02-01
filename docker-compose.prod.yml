@@ -1,0 +1,93 @@
+# ============================================
+# AI Stock Keeper - Production Docker Compose
+# Self-hosted VPS deployment
+# ============================================
+# Запуск: docker compose -f docker-compose.prod.yml up -d
+#
+# Внешние сервисы (подключаются через ENV):
+# - PostgreSQL: DATABASE_URL
+# - Redis: REDIS_URL
+
+services:
+  # ============================================
+  # Nginx Reverse Proxy
+  # ============================================
+  nginx:
+    image: nginx:alpine
+    container_name: ai-stock-keeper-nginx
+    restart: unless-stopped
+    ports:
+      - "${NGINX_HTTP_PORT:-80}:80"
+      - "${NGINX_HTTPS_PORT:-443}:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+      - ./nginx/logs:/var/log/nginx
+    depends_on:
+      app:
+        condition: service_healthy
+    networks:
+      - ai-stock-network
+    healthcheck:
+      test: ["CMD", "nginx", "-t"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ============================================
+  # Next.js Application (via PM2)
+  # ============================================
+  app:
+    image: ghcr.io/hrustalq-lab/ai-stock-keeper:${APP_VERSION:-latest}
+    container_name: ai-stock-keeper-app
+    restart: unless-stopped
+    expose:
+      - "3000"
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: ${DATABASE_URL}
+      REDIS_URL: ${REDIS_URL}
+      ONE_C_BASE_URL: ${ONE_C_BASE_URL}
+      ONE_C_USERNAME: ${ONE_C_USERNAME}
+      ONE_C_PASSWORD: ${ONE_C_PASSWORD}
+      ONE_C_WAREHOUSE_ID: ${ONE_C_WAREHOUSE_ID}
+      ONE_C_WEBHOOK_SECRET: ${ONE_C_WEBHOOK_SECRET}
+      BULL_QUEUE_NAME: ${BULL_QUEUE_NAME:-1c-sync-queue}
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+      RESEND_FROM_EMAIL: ${RESEND_FROM_EMAIL:-alerts@localhost}
+      ALERT_DEFAULT_COOLDOWN_MINS: ${ALERT_DEFAULT_COOLDOWN_MINS:-60}
+      PROPHET_SERVICE_URL: ${PROPHET_SERVICE_URL:-}
+      ROUTE_OPTIMIZATION_ALGORITHM: ${ROUTE_OPTIMIZATION_ALGORITHM:-nearest_neighbor}
+    networks:
+      - ai-stock-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # ============================================
+  # Background Worker (Bull Queue)
+  # ============================================
+  worker:
+    image: ghcr.io/hrustalq-lab/ai-stock-keeper:${APP_VERSION:-latest}
+    container_name: ai-stock-keeper-worker
+    restart: unless-stopped
+    command: ["node", "-e", "require('./scripts/worker.ts')"]
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: ${DATABASE_URL}
+      REDIS_URL: ${REDIS_URL}
+      ONE_C_BASE_URL: ${ONE_C_BASE_URL}
+      ONE_C_USERNAME: ${ONE_C_USERNAME}
+      ONE_C_PASSWORD: ${ONE_C_PASSWORD}
+      ONE_C_WAREHOUSE_ID: ${ONE_C_WAREHOUSE_ID}
+      BULL_QUEUE_NAME: ${BULL_QUEUE_NAME:-1c-sync-queue}
+    networks:
+      - ai-stock-network
+
+networks:
+  ai-stock-network:
+    driver: bridge

@@ -11,7 +11,7 @@
 | **Developer (Phase 4)** | [PHASE-4.md](./PHASE-4.md) | TOOLS-RESEARCH.md (Forecasting section) |
 | **Developer (Phase 5)** | [PHASE-5.md](./PHASE-5.md) | TOOLS-RESEARCH.md (TSP/Optimization section) |
 | **QA / Testing** | [INTEGRATION-TESTING-PLAN.md](./INTEGRATION-TESTING-PLAN.md) | PHASE-1.md |
-| **DevOps / Infra** | [TOOLS-RESEARCH.md](./TOOLS-RESEARCH.md) | INTEGRATION-TESTING-PLAN.md (CI/CD section) |
+| **DevOps / Infra** | [DEPLOYMENT.md](./DEPLOYMENT.md) | INTEGRATION-TESTING-PLAN.md (CI/CD section) |
 | **ML Engineer** | [PHASE-4.md](./PHASE-4.md) | TOOLS-RESEARCH.md (Prophet section) |
 | **1C Integrator** | [1C-INTEGRATION-RESEARCH.md](./1C-INTEGRATION-RESEARCH.md) | PHASE-1.md (sections 1.5-1.6) |
 
@@ -154,6 +154,7 @@ docs/
 ├── AI-STOCK-KEEPER-PLAN.md      # Общий план проекта
 ├── TOOLS-RESEARCH.md            # Исследование технологий
 ├── 1C-INTEGRATION-RESEARCH.md   # Исследование 1C API
+├── DEPLOYMENT.md                # 🚀 Deployment & Branching Guide
 ├── PHASE-1.md                   # План Phase 1 (reference)
 ├── PHASE-1-COMPLETE.md          # Phase 1 — завершён ✅
 ├── PHASE-2.md                   # Phase 2 — завершён ✅

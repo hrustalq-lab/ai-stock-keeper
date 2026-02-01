@@ -1,0 +1,239 @@
+# ============================================
+# AI Stock Keeper - Deploy Workflow
+# Self-hosted VPS deployment
+# ============================================
+# Environments:
+# - development: ai-stock-keeper-dev.hrustalq.dev (ветка dev)
+# - production: ai-stock-keeper.hrustalq.dev (release tags)
+#
+# Versioning (SemVer + alpha):
+# - Pre-MVP: v0.x.x-alpha.N (e.g., v0.1.0-alpha.1, v0.2.0-alpha.3)
+# - MVP: v1.0.0
+# - Post-MVP: v1.x.x, v2.x.x, etc.
+
+name: Deploy
+
+on:
+  push:
+    branches:
+      - dev   # Development deployment
+    tags:
+      - 'v*'  # Release deployment (production) - all version tags
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy'
+        required: true
+        default: 'development'
+        type: choice
+        options:
+          - production
+          - development
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  # ============================================
+  # Build & Push Docker Image
+  # ============================================
+  build:
+    name: Build Docker Image
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    outputs:
+      image_tag: ${{ steps.meta.outputs.tags }}
+      version: ${{ steps.meta.outputs.version }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=sha,prefix=sha-
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            SKIP_ENV_VALIDATION=true
+
+  # ============================================
+  # Deploy to Production (Tag-based releases only)
+  # ============================================
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v')
+    environment: production
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_SSH_PORT }}
+          script: |
+            set -e
+            
+            echo "🚀 Deploying to PRODUCTION: ai-stock-keeper.hrustalq.dev"
+            
+            # Переходим в директорию проекта
+            cd ${{ secrets.PROJECT_PATH_PROD || '/opt/ai-stock-keeper' }}
+            
+            # Логинимся в GitHub Container Registry
+            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+            
+            # Устанавливаем версию
+            export APP_VERSION="${{ needs.build.outputs.version }}"
+            echo "📦 Version: $APP_VERSION"
+            
+            # Пуллим новый образ
+            docker compose -f docker-compose.prod.yml pull app worker
+            
+            # Запускаем миграции
+            docker compose -f docker-compose.prod.yml run --rm app npx prisma migrate deploy || true
+            
+            # Перезапускаем сервисы (zero-downtime с nginx)
+            docker compose -f docker-compose.prod.yml up -d --remove-orphans --no-deps app worker
+            
+            # Ждём healthcheck
+            echo "⏳ Waiting for healthcheck..."
+            sleep 15
+            
+            # Проверяем статус
+            docker compose -f docker-compose.prod.yml ps
+            
+            # Перезагружаем nginx для применения изменений
+            docker compose -f docker-compose.prod.yml exec -T nginx nginx -s reload || true
+            
+            # Чистим старые образы
+            docker image prune -af --filter "until=168h"
+            
+            echo "✅ Production deployment completed!"
+            echo "🌐 URL: https://ai-stock-keeper.hrustalq.dev"
+            echo "🏷️ Release: $APP_VERSION"
+
+  # ============================================
+  # Deploy to Development
+  # ============================================
+  deploy-development:
+    name: Deploy to Development
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.ref == 'refs/heads/dev'
+    environment: development
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_SSH_PORT }}
+          script: |
+            set -e
+            
+            echo "🚀 Deploying to DEVELOPMENT: ai-stock-keeper-dev.hrustalq.dev"
+            
+            # Переходим в директорию проекта
+            cd ${{ secrets.PROJECT_PATH_DEV || '/opt/ai-stock-keeper-dev' }}
+            
+            # Логинимся в GitHub Container Registry
+            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+            
+            # Устанавливаем версию (используем dev тег)
+            export APP_VERSION="dev"
+            echo "📦 Version: $APP_VERSION"
+            
+            # Пуллим новый образ
+            docker compose -f docker-compose.prod.yml pull app worker
+            
+            # Запускаем миграции
+            docker compose -f docker-compose.prod.yml run --rm app npx prisma migrate deploy || true
+            
+            # Перезапускаем сервисы
+            docker compose -f docker-compose.prod.yml up -d --remove-orphans --no-deps app worker
+            
+            # Ждём healthcheck
+            echo "⏳ Waiting for healthcheck..."
+            sleep 15
+            
+            # Проверяем статус
+            docker compose -f docker-compose.prod.yml ps
+            
+            # Перезагружаем nginx
+            docker compose -f docker-compose.prod.yml exec -T nginx nginx -s reload || true
+            
+            # Чистим старые образы (агрессивнее для dev)
+            docker image prune -af --filter "until=24h"
+            
+            echo "✅ Development deployment completed!"
+            echo "🌐 URL: https://ai-stock-keeper-dev.hrustalq.dev"
+
+  # ============================================
+  # Notify on Deployment
+  # ============================================
+  notify:
+    name: Notify
+    runs-on: ubuntu-latest
+    needs: [build, deploy-production, deploy-development]
+    if: always()
+
+    steps:
+      - name: Deployment Summary
+        run: |
+          echo "📊 Deployment Summary"
+          echo "====================="
+          echo "Version: ${{ needs.build.outputs.version }}"
+          echo "Production: ${{ needs.deploy-production.result || 'skipped' }}"
+          echo "Development: ${{ needs.deploy-development.result || 'skipped' }}"
+          
+          if [[ "${{ needs.deploy-production.result }}" == "success" ]]; then
+            echo "🌐 Production: https://ai-stock-keeper.hrustalq.dev"
+          fi
+          
+          if [[ "${{ needs.deploy-development.result }}" == "success" ]]; then
+            echo "🌐 Development: https://ai-stock-keeper-dev.hrustalq.dev"
+          fi

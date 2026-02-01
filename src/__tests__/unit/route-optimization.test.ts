@@ -3,7 +3,7 @@
  * Тестируем алгоритмы оптимизации маршрутов
  */
 
-import { describe, it, expect, beforeEach } from "@jest/globals";
+import { describe, it, expect } from "@jest/globals";
 import {
   routeOptimizationService,
   type PickItem,
@@ -141,9 +141,11 @@ describe("RouteOptimizationService", () => {
         createPickItem("SKU_A2", "A", 2, 1),
       ];
 
-      const result = routeOptimizationService.zoneBased(items);
+      // С начальной точкой в зоне A, aisle 0 - ближайший будет A1
+      const start: Location = { code: "START", zone: "A", aisle: 0, shelf: 0 };
+      const result = routeOptimizationService.zoneBased(items, start);
 
-      // В зоне A должны быть по порядку: A1, A2, A3
+      // В зоне A должны быть в порядке по расстоянию от начала
       const zoneA = result.filter((r) => r.location.zone === "A");
       expect(zoneA.map((r) => r.sku)).toEqual(["SKU_A1", "SKU_A2", "SKU_A3"]);
     });

@@ -7,7 +7,7 @@ const compat = new FlatCompat({
 
 export default tseslint.config(
   {
-		ignores: ['.next']
+		ignores: ['.next', 'coverage']
 	},
   ...compat.extends("next/core-web-vitals"),
   {
@@ -31,6 +31,19 @@ export default tseslint.config(
       { checksVoidReturn: { attributes: false } },
     ],
   },
+  },
+  // Ослабленные правила для тестовых файлов - mock объекты требуют гибкости
+  {
+    files: ['**/*.test.ts', '**/*.test.tsx', '**/__tests__/**/*.ts', '**/__tests__/**/*.tsx'],
+    rules: {
+      '@typescript-eslint/no-explicit-any': 'off',
+      '@typescript-eslint/no-unsafe-assignment': 'off',
+      '@typescript-eslint/no-unsafe-call': 'off',
+      '@typescript-eslint/no-unsafe-member-access': 'off',
+      '@typescript-eslint/no-unsafe-return': 'off',
+      '@typescript-eslint/unbound-method': 'off',
+      '@typescript-eslint/no-floating-promises': 'off',
+    },
   },
   {
 		linterOptions: {

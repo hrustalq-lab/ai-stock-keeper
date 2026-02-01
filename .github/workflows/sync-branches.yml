@@ -1,0 +1,101 @@
+# ============================================
+# AI Stock Keeper - Branch Sync Workflow
+# ============================================
+# При создании release тега автоматически синхронизирует ветки:
+# - Мержит dev в main при создании тега v*
+# - Обеспечивает что main всегда содержит последний релиз
+
+name: Sync Branches
+
+on:
+  push:
+    tags:
+      - 'v*'  # Триггер на все version теги
+
+permissions:
+  contents: write
+
+jobs:
+  sync-to-main:
+    name: Sync dev → main
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Полная история для merge
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Get tag info
+        id: tag
+        run: |
+          TAG_NAME=${GITHUB_REF#refs/tags/}
+          echo "tag_name=$TAG_NAME" >> $GITHUB_OUTPUT
+          echo "🏷️ Processing tag: $TAG_NAME"
+
+      - name: Merge dev to main
+        run: |
+          echo "📥 Fetching all branches..."
+          git fetch origin main dev
+          
+          echo "🔄 Checking out main..."
+          git checkout main
+          
+          echo "🔀 Merging dev into main..."
+          git merge origin/dev --no-edit -m "chore: sync main with dev for release ${{ steps.tag.outputs.tag_name }}"
+          
+          echo "📤 Pushing to main..."
+          git push origin main
+          
+          echo "✅ Branches synchronized!"
+
+      - name: Create Release (optional)
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.tag.outputs.tag_name }}
+          name: Release ${{ steps.tag.outputs.tag_name }}
+          generate_release_notes: true
+          prerelease: ${{ contains(steps.tag.outputs.tag_name, 'alpha') || contains(steps.tag.outputs.tag_name, 'beta') }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # ============================================
+  # Sync main back to dev (if needed)
+  # ============================================
+  sync-to-dev:
+    name: Sync main → dev (post-release)
+    runs-on: ubuntu-latest
+    needs: sync-to-main
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Sync main to dev
+        run: |
+          git fetch origin main dev
+          
+          echo "🔄 Checking out dev..."
+          git checkout dev
+          
+          echo "🔀 Merging main into dev (to keep in sync)..."
+          git merge origin/main --no-edit -m "chore: sync dev with main after release" || true
+          
+          echo "📤 Pushing to dev..."
+          git push origin dev || true
+          
+          echo "✅ Dev branch synchronized!"

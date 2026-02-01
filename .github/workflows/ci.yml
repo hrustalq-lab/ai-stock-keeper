@@ -3,8 +3,23 @@ name: CI
 on:
   push:
     branches: [main, dev]
+    paths-ignore:
+      - '*.md'
+      - 'docs/**'
+      - '.gitignore'
+      - 'LICENSE'
   pull_request:
     branches: [main, dev]
+    paths-ignore:
+      - '*.md'
+      - 'docs/**'
+      - '.gitignore'
+      - 'LICENSE'
+
+# Отменяет предыдущие запуски при новых коммитах
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
 
 env:
   # Переменные окружения для тестов

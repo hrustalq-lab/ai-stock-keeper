@@ -19,6 +19,13 @@ on:
       - dev   # Development deployment
     tags:
       - 'v*'  # Release deployment (production) - all version tags
+    paths-ignore:
+      - '*.md'
+      - 'docs/**'
+      - '.gitignore'
+      - 'LICENSE'
+      - '__tests__/**'
+      - 'jest.config.js'
   workflow_dispatch:
     inputs:
       environment:
@@ -29,6 +36,11 @@ on:
         options:
           - production
           - development
+
+# Отменяет предыдущие запуски при новых коммитах (кроме тегов)
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: ${{ !startsWith(github.ref, 'refs/tags/') }}
 
 env:
   REGISTRY: ghcr.io

@@ -146,6 +146,7 @@ jobs:
           # Передаём версию через env для корректной подстановки в ssh-action
           APP_VERSION: ${{ needs.build.outputs.version }}
           PROJECT_PATH: ${{ secrets.PROJECT_PATH_PROD }}
+          PROJECT_PATH_DEV: ${{ secrets.PROJECT_PATH_DEV }}
           RUN_MIGRATIONS: ${{ steps.migrations.outputs.changed }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_ACTOR: ${{ github.actor }}
@@ -163,7 +164,7 @@ jobs:
           username: ${{ secrets.VPS_USERNAME }}
           key: ${{ secrets.VPS_SSH_KEY }}
           port: ${{ secrets.VPS_SSH_PORT }}
-          envs: APP_VERSION,PROJECT_PATH,GH_TOKEN,GH_ACTOR,DATABASE_URL,REDIS_URL,ONE_C_BASE_URL,ONE_C_USERNAME,ONE_C_PASSWORD,ONE_C_WAREHOUSE_ID,ONE_C_WEBHOOK_SECRET,RESEND_API_KEY,RESEND_FROM_EMAIL,RUN_MIGRATIONS
+          envs: APP_VERSION,PROJECT_PATH,PROJECT_PATH_DEV,GH_TOKEN,GH_ACTOR,DATABASE_URL,REDIS_URL,ONE_C_BASE_URL,ONE_C_USERNAME,ONE_C_PASSWORD,ONE_C_WAREHOUSE_ID,ONE_C_WEBHOOK_SECRET,RESEND_API_KEY,RESEND_FROM_EMAIL,RUN_MIGRATIONS
           script: |
             set -e
             
@@ -253,7 +254,7 @@ jobs:
             docker compose -f docker-compose.prod.yml ps
             
             # Перезагружаем nginx из dev директории для обновления конфигов
-            cd /root/ai-stock-keeper-dev && docker compose -f docker-compose.dev.yml exec -T nginx nginx -s reload || true
+            cd "${PROJECT_PATH_DEV}" && docker compose -f docker-compose.dev.yml exec -T nginx nginx -s reload || true
             cd "${PROJECT_PATH}"
             
             # Чистим старые образы

@@ -66,13 +66,15 @@ export function BarcodeScanner({
     const target = scannerRef.current;
     const rect = target.getBoundingClientRect();
     
-    // Проверяем на валидные размеры: не 0, не NaN, и достаточно большие для сканирования
-    const MIN_DIMENSION = 100; // Минимальный размер для надёжной работы
+    // Проверяем на валидные размеры: не 0, не NaN, и соответствуют минимумам из CSS
+    // CSS устанавливает minWidth: 320px, minHeight: 240px — проверка должна соответствовать
+    const MIN_WIDTH = 320;
+    const MIN_HEIGHT = 240;
     const hasValidDimensions = 
       Number.isFinite(rect.width) && 
       Number.isFinite(rect.height) && 
-      rect.width >= MIN_DIMENSION && 
-      rect.height >= MIN_DIMENSION;
+      rect.width >= MIN_WIDTH && 
+      rect.height >= MIN_HEIGHT;
     
     if (!hasValidDimensions) {
       // Очищаем предыдущий таймаут если есть
@@ -96,10 +98,11 @@ export function BarcodeScanner({
       
       setHasPermission(true);
 
-      // Используем проверенные размеры (уже валидированы выше)
-      // Гарантируем минимум 640x480 для оптимальной работы Quagga
-      const targetWidth = Math.max(Math.floor(rect.width), 640);
-      const targetHeight = Math.max(Math.floor(rect.height), 480);
+      // Используем фактические размеры контейнера (уже валидированы выше как минимум 320x240)
+      // НЕ используем Math.max — это вызывало проблемы когда запрашивали 640x480 для контейнера 300x200
+      // Camera constraints уже имеют min: 320/240 для гарантии минимального разрешения
+      const targetWidth = Math.floor(rect.width);
+      const targetHeight = Math.floor(rect.height);
 
       await Quagga.init(
         {

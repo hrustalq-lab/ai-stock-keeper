@@ -2,6 +2,7 @@
 
 /**
  * Карточка позиции сборки (Mobile-friendly)
+ * Updated: Compact, restrained colors
  */
 
 import { useState } from "react";
@@ -19,10 +20,10 @@ interface PickingItemCardProps {
 }
 
 const statusStyles: Record<string, { bg: string; border: string; icon: string }> = {
-  pending: { bg: "bg-zinc-800/50", border: "border-zinc-700/50", icon: "⏳" },
-  picked: { bg: "bg-green-500/10", border: "border-green-500/30", icon: "✅" },
-  skipped: { bg: "bg-amber-500/10", border: "border-amber-500/30", icon: "⏭" },
-  shortage: { bg: "bg-red-500/10", border: "border-red-500/30", icon: "⚠️" },
+  pending: { bg: "bg-secondary/30", border: "border-border/50", icon: "⏳" },
+  picked: { bg: "bg-emerald-500/5", border: "border-emerald-500/20", icon: "✅" },
+  skipped: { bg: "bg-amber-500/5", border: "border-amber-500/20", icon: "⏭" },
+  shortage: { bg: "bg-destructive/5", border: "border-destructive/20", icon: "⚠️" },
 };
 
 export function PickingItemCard({
@@ -52,45 +53,45 @@ export function PickingItemCard({
 
   return (
     <div
-      className={`rounded-xl border transition-all ${style?.bg} ${style?.border} ${
+      className={`rounded-lg border transition-all ${style?.bg} ${style?.border} ${
         isActive && !isCompleted
-          ? "ring-2 ring-blue-500 ring-offset-2 ring-offset-zinc-900"
+          ? "ring-2 ring-primary ring-offset-1 ring-offset-background"
           : ""
       } ${isCompleted ? "opacity-60" : ""}`}
     >
       {/* Заголовок */}
-      <div className="flex items-center justify-between border-b border-zinc-700/30 px-4 py-3">
-        <div className="flex items-center gap-2">
-          <span className="flex h-7 w-7 items-center justify-center rounded-full bg-zinc-700/50 text-sm font-bold text-white">
+      <div className="flex items-center justify-between border-b border-border/30 px-3 py-2">
+        <div className="flex items-center gap-1.5">
+          <span className="flex size-5 items-center justify-center rounded-full bg-muted text-[10px] font-bold text-foreground">
             {item.sequenceNum}
           </span>
-          <span className="font-mono text-xs text-zinc-400">{item.sku}</span>
+          <span className="font-mono text-[10px] text-muted-foreground">{item.sku}</span>
         </div>
-        <span className="text-lg">{style?.icon}</span>
+        <span className="text-base">{style?.icon}</span>
       </div>
 
       {/* Контент */}
-      <div className="p-4">
-        <h3 className="mb-3 text-lg font-semibold text-white">
+      <div className="p-3">
+        <h3 className="mb-2 text-sm font-semibold text-foreground">
           {item.productName}
         </h3>
 
         {/* Локация и количество */}
-        <div className="mb-4 grid grid-cols-2 gap-3">
-          <div className="rounded-lg bg-zinc-700/30 p-3">
-            <div className="mb-1 text-xs text-zinc-400">📍 Локация</div>
-            <div className="font-mono text-xl font-bold text-white">
+        <div className="mb-3 grid grid-cols-2 gap-2">
+          <div className="rounded-md bg-muted/50 px-2 py-1.5">
+            <div className="text-[10px] text-muted-foreground">📍 Локация</div>
+            <div className="font-mono text-base font-bold text-foreground">
               {item.locationCode}
             </div>
-            <div className="text-xs text-zinc-500">Зона {item.zone}</div>
+            <div className="text-[10px] text-muted-foreground">Зона {item.zone}</div>
           </div>
-          <div className="rounded-lg bg-zinc-700/30 p-3">
-            <div className="mb-1 text-xs text-zinc-400">📦 Количество</div>
-            <div className="font-mono text-xl font-bold text-white">
+          <div className="rounded-md bg-muted/50 px-2 py-1.5">
+            <div className="text-[10px] text-muted-foreground">📦 Кол-во</div>
+            <div className="font-mono text-base font-bold text-foreground">
               {item.requiredQty} шт
             </div>
             {item.pickedQty > 0 && (
-              <div className="text-xs text-green-400">
+              <div className="text-[10px] text-emerald-600">
                 Собрано: {item.pickedQty}
               </div>
             )}
@@ -99,12 +100,12 @@ export function PickingItemCard({
 
         {/* Действия (только для активной незавершённой позиции) */}
         {isActive && !isCompleted && (
-          <div className="space-y-3">
+          <div className="space-y-2">
             {/* Ввод количества */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5">
               <button
                 onClick={() => setPickedQty(Math.max(0, pickedQty - 1))}
-                className="flex h-10 w-10 items-center justify-center rounded-lg bg-zinc-700/50 text-lg font-bold text-white transition-colors hover:bg-zinc-600"
+                className="flex size-8 items-center justify-center rounded-md bg-secondary text-base font-bold text-foreground transition-colors hover:bg-secondary/80"
               >
                 −
               </button>
@@ -114,33 +115,33 @@ export function PickingItemCard({
                 onChange={(e) =>
                   setPickedQty(Math.max(0, parseInt(e.target.value) || 0))
                 }
-                className="h-10 w-20 rounded-lg border border-zinc-600 bg-zinc-700/50 text-center font-mono text-lg text-white focus:border-blue-500 focus:outline-none"
+                className="h-8 w-14 rounded-md border border-border bg-input text-center font-mono text-sm text-foreground focus:border-primary focus:outline-none"
               />
               <button
                 onClick={() => setPickedQty(pickedQty + 1)}
-                className="flex h-10 w-10 items-center justify-center rounded-lg bg-zinc-700/50 text-lg font-bold text-white transition-colors hover:bg-zinc-600"
+                className="flex size-8 items-center justify-center rounded-md bg-secondary text-base font-bold text-foreground transition-colors hover:bg-secondary/80"
               >
                 +
               </button>
               <button
                 onClick={() => setPickedQty(item.requiredQty)}
-                className="ml-auto rounded-lg bg-zinc-700/50 px-3 py-2 text-sm text-zinc-300 transition-colors hover:bg-zinc-600"
+                className="ml-auto rounded-md bg-secondary px-2 py-1 text-[10px] text-muted-foreground transition-colors hover:bg-secondary/80"
               >
                 Все ({item.requiredQty})
               </button>
             </div>
 
             {/* Кнопки */}
-            <div className="flex gap-2">
+            <div className="flex gap-1.5">
               <button
                 onClick={handleConfirm}
-                className="flex-1 rounded-lg bg-green-600 py-3 font-semibold text-white transition-colors hover:bg-green-500"
+                className="flex-1 rounded-md bg-emerald-600 py-2 text-xs font-semibold text-white transition-colors hover:bg-emerald-500"
               >
                 ✓ Подтвердить
               </button>
               <button
                 onClick={() => setShowIssueMenu(!showIssueMenu)}
-                className="rounded-lg bg-zinc-700 px-4 py-3 text-zinc-300 transition-colors hover:bg-zinc-600"
+                className="rounded-md bg-secondary px-3 py-2 text-muted-foreground transition-colors hover:bg-secondary/80"
               >
                 ⚠️
               </button>
@@ -148,32 +149,32 @@ export function PickingItemCard({
 
             {/* Меню проблем */}
             {showIssueMenu && (
-              <div className="space-y-2 rounded-lg bg-zinc-700/50 p-3">
-                <div className="mb-2 text-xs font-medium text-zinc-400">
+              <div className="space-y-1.5 rounded-md bg-muted/50 p-2">
+                <div className="text-[10px] font-medium text-muted-foreground">
                   Сообщить о проблеме:
                 </div>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-2 gap-1.5">
                   <button
                     onClick={() => handleIssue("not_found")}
-                    className="rounded-lg bg-red-500/20 px-3 py-2 text-sm text-red-300 transition-colors hover:bg-red-500/30"
+                    className="rounded-md bg-destructive/10 px-2 py-1.5 text-[10px] text-destructive transition-colors hover:bg-destructive/20"
                   >
                     🔍 Не найден
                   </button>
                   <button
                     onClick={() => handleIssue("wrong_location")}
-                    className="rounded-lg bg-amber-500/20 px-3 py-2 text-sm text-amber-300 transition-colors hover:bg-amber-500/30"
+                    className="rounded-md bg-amber-500/10 px-2 py-1.5 text-[10px] text-amber-600 transition-colors hover:bg-amber-500/20"
                   >
                     📍 Не на месте
                   </button>
                   <button
                     onClick={() => handleIssue("damaged")}
-                    className="rounded-lg bg-orange-500/20 px-3 py-2 text-sm text-orange-300 transition-colors hover:bg-orange-500/30"
+                    className="rounded-md bg-orange-500/10 px-2 py-1.5 text-[10px] text-orange-600 transition-colors hover:bg-orange-500/20"
                   >
                     💔 Повреждён
                   </button>
                   <button
                     onClick={() => handleIssue("shortage")}
-                    className="rounded-lg bg-purple-500/20 px-3 py-2 text-sm text-purple-300 transition-colors hover:bg-purple-500/30"
+                    className="rounded-md bg-violet-500/10 px-2 py-1.5 text-[10px] text-violet-600 transition-colors hover:bg-violet-500/20"
                   >
                     📉 Недостача
                   </button>
@@ -182,8 +183,8 @@ export function PickingItemCard({
                   type="text"
                   value={issueNote}
                   onChange={(e) => setIssueNote(e.target.value)}
-                  placeholder="Комментарий (опционально)"
-                  className="mt-2 w-full rounded-lg border border-zinc-600 bg-zinc-800 px-3 py-2 text-sm text-white placeholder-zinc-500 focus:border-blue-500 focus:outline-none"
+                  placeholder="Комментарий"
+                  className="mt-1 w-full rounded-md border border-border bg-input px-2 py-1 text-xs text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
                 />
               </div>
             )}
@@ -192,8 +193,8 @@ export function PickingItemCard({
 
         {/* Информация о завершении */}
         {isCompleted && (
-          <div className="rounded-lg bg-zinc-700/20 p-3 text-center">
-            <span className="text-sm text-zinc-400">
+          <div className="rounded-md bg-muted/30 p-2 text-center">
+            <span className="text-xs text-muted-foreground">
               {item.status === "picked" && (
                 <>✅ Собрано: {item.pickedQty} шт</>
               )}

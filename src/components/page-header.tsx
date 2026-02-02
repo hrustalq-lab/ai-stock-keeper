@@ -27,6 +27,7 @@ interface PageHeaderProps {
 /**
  * PageHeader - универсальный заголовок страницы
  * Включает: sidebar trigger, breadcrumbs, заголовок, описание, действия
+ * Issue #4: Compact layout
  */
 export function PageHeader({
   title,
@@ -35,10 +36,10 @@ export function PageHeader({
   actions,
 }: PageHeaderProps) {
   return (
-    <header className="sticky top-0 z-10 flex h-14 shrink-0 items-center gap-2 border-b bg-background/95 px-4 backdrop-blur supports-backdrop-filter:bg-background/60 md:h-16">
+    <header className="sticky top-0 z-10 flex h-12 shrink-0 items-center gap-2 border-b bg-background/95 px-3 backdrop-blur supports-backdrop-filter:bg-background/60 md:h-12 md:px-4">
       <div className="flex min-w-0 flex-1 items-center gap-2">
         <SidebarTrigger className="-ml-1 shrink-0" />
-        <Separator orientation="vertical" className="mr-2 hidden h-4 sm:block" />
+        <Separator orientation="vertical" className="mr-1.5 hidden h-4 sm:block" />
 
         {/* Breadcrumbs */}
         {breadcrumbs && breadcrumbs.length > 0 && (

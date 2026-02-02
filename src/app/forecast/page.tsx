@@ -135,70 +135,70 @@ export default function ForecastPage() {
         }
       />
 
-      <main className="flex-1 p-4 md:p-6">
-        {/* Сводка по срочности */}
-        <div className="mb-4 grid grid-cols-3 gap-2 sm:mb-6 sm:gap-4">
-          <Card className="border-destructive/30">
-            <CardContent className="flex flex-col items-center gap-1 p-2 sm:flex-row sm:gap-4 sm:p-4">
-              <div className="rounded-lg bg-destructive/10 p-2 sm:p-3">
-                <AlertCircle className="size-4 text-destructive sm:size-6" />
+      <main className="flex-1 p-3 md:p-4">
+        {/* Сводка по срочности - compact */}
+        <div className="mb-3 grid grid-cols-3 gap-2 sm:mb-4 sm:gap-3">
+          <Card className="border-border/50 border-l-2 border-l-destructive">
+            <CardContent className="flex items-center gap-2 p-2 sm:gap-3 sm:p-3">
+              <div className="rounded-md bg-destructive/10 p-1.5">
+                <AlertCircle className="size-4 text-destructive" />
               </div>
-              <div className="text-center sm:text-left">
-                <p className="text-lg font-bold text-destructive sm:text-2xl">
+              <div>
+                <p className="text-base font-semibold text-destructive sm:text-lg">
                   {summary?.critical ?? 0}
                 </p>
-                <p className="text-[10px] text-muted-foreground sm:text-sm">Критичных</p>
+                <p className="text-[10px] text-muted-foreground">Критичных</p>
               </div>
             </CardContent>
           </Card>
           
-          <Card className="border-amber-500/30">
-            <CardContent className="flex flex-col items-center gap-1 p-2 sm:flex-row sm:gap-4 sm:p-4">
-              <div className="rounded-lg bg-amber-500/10 p-2 sm:p-3">
-                <AlertTriangle className="size-4 text-amber-500 sm:size-6" />
+          <Card className="border-border/50 border-l-2 border-l-amber-500">
+            <CardContent className="flex items-center gap-2 p-2 sm:gap-3 sm:p-3">
+              <div className="rounded-md bg-amber-500/10 p-1.5">
+                <AlertTriangle className="size-4 text-amber-500" />
               </div>
-              <div className="text-center sm:text-left">
-                <p className="text-lg font-bold text-amber-500 sm:text-2xl">
+              <div>
+                <p className="text-base font-semibold text-amber-600 sm:text-lg">
                   {summary?.warning ?? 0}
                 </p>
-                <p className="text-[10px] text-muted-foreground sm:text-sm">Внимание</p>
+                <p className="text-[10px] text-muted-foreground">Внимание</p>
               </div>
             </CardContent>
           </Card>
           
-          <Card className="border-emerald-500/30">
-            <CardContent className="flex flex-col items-center gap-1 p-2 sm:flex-row sm:gap-4 sm:p-4">
-              <div className="rounded-lg bg-emerald-500/10 p-2 sm:p-3">
-                <CheckCircle className="size-4 text-emerald-500 sm:size-6" />
+          <Card className="border-border/50 border-l-2 border-l-emerald-500">
+            <CardContent className="flex items-center gap-2 p-2 sm:gap-3 sm:p-3">
+              <div className="rounded-md bg-emerald-500/10 p-1.5">
+                <CheckCircle className="size-4 text-emerald-500" />
               </div>
-              <div className="text-center sm:text-left">
-                <p className="text-lg font-bold text-emerald-500 sm:text-2xl">
+              <div>
+                <p className="text-base font-semibold text-emerald-600 sm:text-lg">
                   {summary?.normal ?? 0}
                 </p>
-                <p className="text-[10px] text-muted-foreground sm:text-sm">В норме</p>
+                <p className="text-[10px] text-muted-foreground">В норме</p>
               </div>
             </CardContent>
           </Card>
         </div>
 
         {/* Основной контент */}
-        <div className="grid gap-4 sm:gap-6 lg:grid-cols-2">
+        <div className="grid gap-3 sm:gap-4 lg:grid-cols-2">
           {/* Левая колонка: таблица рекомендаций */}
-          <div className="space-y-6">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0">
+          <div className="space-y-3 sm:space-y-4">
+            <Card className="border-border/50">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <div>
-                  <CardTitle className="flex items-center gap-2">
-                    <TrendingUp className="size-5 text-primary" />
-                    Рекомендации к заказу
+                  <CardTitle className="flex items-center gap-1.5 text-sm">
+                    <TrendingUp className="size-4 text-primary" />
+                    Рекомендации
                   </CardTitle>
-                  <CardDescription>
-                    Товары, требующие пополнения запасов
+                  <CardDescription className="text-xs">
+                    Товары для пополнения
                   </CardDescription>
                 </div>
-                <Button variant="outline" size="sm">
-                  <Download className="mr-2 size-4" />
-                  Экспорт CSV
+                <Button variant="outline" size="sm" className="h-7 text-xs">
+                  <Download className="mr-1 size-3" />
+                  CSV
                 </Button>
               </CardHeader>
               <CardContent>
@@ -223,23 +223,23 @@ export default function ForecastPage() {
             </Card>
 
             {/* Список для выбора товара */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-sm">Выберите товар для детального прогноза</CardTitle>
+            <Card className="border-border/50">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-xs text-muted-foreground">Выберите товар для прогноза</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-3 sm:gap-2">
                   {recommendations?.slice(0, 6).map((r) => (
                     <Button
                       key={`${r.sku}-${r.warehouse}`}
                       variant={selectedSku === r.sku ? "default" : "outline"}
-                      className="h-auto flex-col items-start gap-1 p-3"
+                      className="h-auto flex-col items-start gap-0.5 px-2 py-1.5"
                       onClick={() => setSelectedSku(r.sku)}
                     >
-                      <span className="truncate text-sm font-medium">
+                      <span className="w-full truncate text-xs font-medium">
                         {r.productName}
                       </span>
-                      <span className="font-mono text-xs text-muted-foreground">
+                      <span className="font-mono text-[10px] text-muted-foreground">
                         {r.sku}
                       </span>
                     </Button>
@@ -250,12 +250,12 @@ export default function ForecastPage() {
           </div>
 
           {/* Правая колонка: график */}
-          <div className="space-y-6">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0">
-                <CardTitle className="flex items-center gap-2">
-                  <BarChart3 className="size-5 text-primary" />
-                  Прогноз по товару
+          <div className="space-y-3 sm:space-y-4">
+            <Card className="border-border/50">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="flex items-center gap-1.5 text-sm">
+                  <BarChart3 className="size-4 text-primary" />
+                  Прогноз
                 </CardTitle>
                 {chartData && (
                   <TrendIndicator trend={chartData.trend} size="sm" />
@@ -268,82 +268,78 @@ export default function ForecastPage() {
                       data={chartData.chartData}
                       reorderPoint={chartData.reorderPoint}
                       currentQty={chartData.currentQty}
-                      height={280}
+                      height={200}
                     />
 
-                    {/* Статистика под графиком */}
-                    <div className="mt-4 grid grid-cols-2 gap-4 border-t pt-4 sm:grid-cols-4">
+                    {/* Статистика под графиком - compact */}
+                    <div className="mt-2 grid grid-cols-4 gap-2 border-t pt-2">
                       <div className="text-center">
-                        <p className="text-xs text-muted-foreground">Текущий остаток</p>
-                        <p className="text-lg font-semibold">
+                        <p className="text-[10px] text-muted-foreground">Остаток</p>
+                        <p className="text-sm font-semibold">
                           {chartData.currentQty}
                         </p>
                       </div>
                       <div className="text-center">
-                        <p className="text-xs text-muted-foreground">До нуля</p>
+                        <p className="text-[10px] text-muted-foreground">До 0</p>
                         <p
-                          className={`text-lg font-semibold ${
+                          className={`text-sm font-semibold ${
                             chartData.daysToStockout <= 7
                               ? "text-destructive"
                               : chartData.daysToStockout <= 14
-                              ? "text-amber-500"
-                              : "text-emerald-500"
+                              ? "text-amber-600"
+                              : "text-emerald-600"
                           }`}
                         >
                           {chartData.daysToStockout === 999
                             ? "∞"
-                            : `${chartData.daysToStockout} дн`}
+                            : `${chartData.daysToStockout}д`}
                         </p>
                       </div>
                       <div className="text-center">
-                        <p className="text-xs text-muted-foreground">Расход/день</p>
-                        <p className="text-lg font-semibold">
+                        <p className="text-[10px] text-muted-foreground">Расх/д</p>
+                        <p className="text-sm font-semibold">
                           {chartData.avgDailyConsumption.toFixed(1)}
                         </p>
                       </div>
                       <div className="text-center">
-                        <p className="text-xs text-muted-foreground">Точка заказа</p>
-                        <p className="text-lg font-semibold text-amber-500">
+                        <p className="text-[10px] text-muted-foreground">Заказ</p>
+                        <p className="text-sm font-semibold text-amber-600">
                           {chartData.reorderPoint}
                         </p>
                       </div>
                     </div>
                   </>
                 ) : (
-                  <div className="flex h-[280px] flex-col items-center justify-center text-muted-foreground">
-                    <BarChart3 className="mb-2 size-10" />
-                    <p>
+                  <div className="flex h-[200px] flex-col items-center justify-center text-muted-foreground">
+                    <BarChart3 className="mb-1.5 size-8" />
+                    <p className="text-xs">
                       {loadingChart
                         ? "Загрузка..."
-                        : "Выберите товар для просмотра прогноза"}
+                        : "Выберите товар"}
                     </p>
                   </div>
                 )}
               </CardContent>
             </Card>
 
-            {/* Информация о модели */}
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="flex items-center gap-2 text-sm">
-                  <Info className="size-4" />
-                  О модели прогнозирования
+            {/* Информация о модели - compact */}
+            <Card className="border-border/50">
+              <CardHeader className="pb-1.5">
+                <CardTitle className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                  <Info className="size-3" />
+                  О модели
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-xs text-muted-foreground">
                   {model === "sma" && (
                     <>
-                      <strong className="text-foreground">Simple Moving Average (SMA)</strong> — простое скользящее
-                      среднее за последние 7 дней. Подходит для товаров со стабильным
-                      спросом.
+                      <strong className="text-foreground">SMA</strong> — скользящее среднее за 7 дней
                     </>
                   )}
                   {model === "ema" && (
                     <>
-                      <strong className="text-foreground">Exponential Moving Average (EMA)</strong> — экспоненциальное
-                      среднее, где недавние данные имеют больший вес. Лучше реагирует на
-                      изменения тренда.
+                      <strong className="text-foreground">EMA</strong> — экспоненциальное среднее
                     </>
                   )}
                 </p>

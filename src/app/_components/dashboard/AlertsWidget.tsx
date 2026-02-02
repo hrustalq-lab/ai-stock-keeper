@@ -2,6 +2,7 @@
 
 /**
  * Виджет последних алертов
+ * Issue #4, #5: Compact layout, information density
  */
 
 import { formatDistanceToNow } from "date-fns";
@@ -36,13 +37,13 @@ export function AlertsWidget({ limit = 5 }: AlertsWidgetProps) {
 
   if (isLoading) {
     return (
-      <Card>
-        <CardHeader className="pb-2">
-          <Skeleton className="h-5 w-24" />
+      <Card className="border-border/50">
+        <CardHeader className="pb-1.5">
+          <Skeleton className="h-4 w-20" />
         </CardHeader>
-        <CardContent className="space-y-3">
+        <CardContent className="space-y-1.5">
           {[1, 2, 3].map((i) => (
-            <Skeleton key={i} className="h-16" />
+            <Skeleton key={i} className="h-12" />
           ))}
         </CardContent>
       </Card>
@@ -50,20 +51,20 @@ export function AlertsWidget({ limit = 5 }: AlertsWidgetProps) {
   }
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
-        <CardTitle className="flex shrink-0 items-center gap-2 text-sm font-medium">
-          <Bell className="size-4 text-primary" />
+    <Card className="border-border/50">
+      <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-1.5">
+        <CardTitle className="flex shrink-0 items-center gap-1.5 text-sm font-medium">
+          <Bell className="size-3.5 text-primary" />
           Алерты
         </CardTitle>
         {stats && (
-          <div className="flex flex-wrap items-center justify-end gap-1.5">
-            <Badge variant="outline" className="gap-1 text-[10px] sm:text-xs">
+          <div className="flex items-center gap-1">
+            <Badge variant="outline" className="h-5 gap-1 px-1.5 text-[10px]">
               <span className="size-1.5 rounded-full bg-emerald-500" />
               {stats.activeRules}
             </Badge>
-            <Badge variant="secondary" className="text-[10px] sm:text-xs">
-              {stats.totalSent} отправлено
+            <Badge variant="secondary" className="h-5 px-1.5 text-[10px]">
+              {stats.totalSent}
             </Badge>
           </div>
         )}
@@ -71,54 +72,51 @@ export function AlertsWidget({ limit = 5 }: AlertsWidgetProps) {
 
       <CardContent>
         {!history || history.length === 0 ? (
-          <div className="flex flex-col items-center gap-3 py-8">
-            <BellOff className="size-10 text-muted-foreground" />
-            <p className="text-sm text-muted-foreground">Нет алертов</p>
-            <Button variant="outline" size="sm" asChild>
+          <div className="flex flex-col items-center gap-2 py-4">
+            <BellOff className="size-6 text-muted-foreground" />
+            <p className="text-xs text-muted-foreground">Нет алертов</p>
+            <Button variant="outline" size="sm" className="h-7 text-xs" asChild>
               <Link href="/settings/alerts">
-                <Settings className="mr-2 size-4" />
-                Настроить алерты
+                <Settings className="mr-1.5 size-3" />
+                Настроить
               </Link>
             </Button>
           </div>
         ) : (
-          <ScrollArea className="h-[220px]">
-            <div className="space-y-2">
+          <ScrollArea className="h-[160px]">
+            <div className="space-y-1.5">
               {history.map((alert: AlertHistoryItem) => (
                 <div
                   key={alert.id}
-                  className="flex items-start gap-3 rounded-lg bg-secondary/30 p-3 transition-colors hover:bg-secondary/50"
+                  className="flex items-start gap-2 rounded-md bg-secondary/30 px-2 py-1.5 transition-colors hover:bg-secondary/50"
                 >
-                  <div className={`mt-0.5 rounded-full p-1 ${
+                  <div className={`mt-0.5 rounded-full p-0.5 ${
                     alert.status === "sent" 
                       ? "bg-emerald-500/10 text-emerald-500" 
                       : "bg-destructive/10 text-destructive"
                   }`}>
                     {alert.status === "sent" ? (
-                      <CheckCircle className="size-4" />
+                      <CheckCircle className="size-3" />
                     ) : (
-                      <XCircle className="size-4" />
+                      <XCircle className="size-3" />
                     )}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium">{alert.ruleName}</p>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="truncate text-xs font-medium leading-tight">{alert.ruleName}</p>
+                    <p className="truncate text-[10px] text-muted-foreground">
                       {alert.productName ?? alert.sku}:{" "}
                       <span className="font-mono text-amber-500">
-                        {alert.newValue} шт
-                      </span>{" "}
-                      (порог: {alert.threshold})
-                    </p>
-                    <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
-                      <span>{alert.warehouse}</span>
-                      <span>•</span>
-                      <span>
-                        {formatDistanceToNow(alert.createdAt, {
-                          addSuffix: true,
-                          locale: ru,
-                        })}
+                        {alert.newValue}
                       </span>
-                    </div>
+                      /{alert.threshold}
+                    </p>
+                    <p className="text-[10px] text-muted-foreground">
+                      {alert.warehouse} •{" "}
+                      {formatDistanceToNow(alert.createdAt, {
+                        addSuffix: true,
+                        locale: ru,
+                      })}
+                    </p>
                   </div>
                 </div>
               ))}
@@ -128,10 +126,10 @@ export function AlertsWidget({ limit = 5 }: AlertsWidgetProps) {
       </CardContent>
 
       <CardFooter className="pt-0">
-        <Button variant="ghost" size="sm" className="w-full" asChild>
+        <Button variant="ghost" size="sm" className="h-7 w-full text-xs" asChild>
           <Link href="/settings/alerts">
-            Управление алертами
-            <ArrowRight className="ml-2 size-4" />
+            Управление
+            <ArrowRight className="ml-1 size-3" />
           </Link>
         </Button>
       </CardFooter>

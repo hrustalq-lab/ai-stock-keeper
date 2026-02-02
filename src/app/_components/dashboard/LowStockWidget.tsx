@@ -2,6 +2,7 @@
 
 /**
  * Виджет товаров с низким остатком
+ * Issue #4, #5: Compact layout, information density
  */
 
 import { api } from "~/trpc/react";
@@ -29,13 +30,13 @@ export function LowStockWidget({
 
   if (isLoading) {
     return (
-      <Card>
-        <CardHeader className="pb-2">
-          <Skeleton className="h-5 w-32" />
+      <Card className="border-border/50">
+        <CardHeader className="pb-1.5">
+          <Skeleton className="h-4 w-28" />
         </CardHeader>
-        <CardContent className="space-y-3">
+        <CardContent className="space-y-1.5">
           {[1, 2, 3].map((i) => (
-            <Skeleton key={i} className="h-14" />
+            <Skeleton key={i} className="h-10" />
           ))}
         </CardContent>
       </Card>
@@ -43,52 +44,52 @@ export function LowStockWidget({
   }
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="flex items-center gap-2 text-sm font-medium">
-          <AlertTriangle className="size-4 text-amber-500" />
+    <Card className="border-border/50">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1.5">
+        <CardTitle className="flex items-center gap-1.5 text-sm font-medium">
+          <AlertTriangle className="size-3.5 text-amber-500" />
           Низкий остаток
         </CardTitle>
         {items && items.length > 0 && (
-          <Badge variant="secondary">{items.length}</Badge>
+          <Badge variant="secondary" className="h-5 px-1.5 text-[10px]">{items.length}</Badge>
         )}
       </CardHeader>
 
       <CardContent>
         {!items || items.length === 0 ? (
-          <div className="flex flex-col items-center gap-2 py-6">
-            <CheckCircle className="size-10 text-emerald-500" />
-            <p className="text-sm text-muted-foreground">Все остатки в норме</p>
+          <div className="flex items-center justify-center gap-2 py-4">
+            <CheckCircle className="size-5 text-emerald-500" />
+            <p className="text-sm text-muted-foreground">Остатки в норме</p>
           </div>
         ) : (
-          <ScrollArea className="h-[200px]">
-            <div className="space-y-2">
+          <ScrollArea className="h-[160px]">
+            <div className="space-y-1.5">
               {items.map((item) => (
                 <div
                   key={item.id}
-                  className="flex items-center justify-between rounded-lg bg-secondary/50 p-3 transition-colors hover:bg-secondary"
+                  className="flex items-center justify-between rounded-md bg-secondary/40 px-2.5 py-1.5 transition-colors hover:bg-secondary/60"
                 >
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium">
+                    <p className="truncate text-sm font-medium leading-tight">
                       {item.name}
                     </p>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="truncate text-[10px] text-muted-foreground">
                       {item.sku} • {item.warehouse}
                     </p>
                   </div>
-                  <div className="ml-3 text-right">
-                    <p
-                      className={`text-lg font-bold ${
+                  <div className="ml-2 flex items-baseline gap-0.5 text-right">
+                    <span
+                      className={`text-base font-semibold ${
                         item.quantity === 0
                           ? "text-destructive"
                           : "text-amber-500"
                       }`}
                     >
                       {item.quantity}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      / {item.reorderPoint}
-                    </p>
+                    </span>
+                    <span className="text-[10px] text-muted-foreground">
+                      /{item.reorderPoint}
+                    </span>
                   </div>
                 </div>
               ))}

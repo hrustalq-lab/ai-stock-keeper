@@ -2,12 +2,13 @@
 
 /**
  * Обзор инвентаря — основные метрики
+ * Issue #1, #4, #5: Compact layout, reduced padding, information density
  */
 
 import { formatDistanceToNow } from "date-fns";
 import { ru } from "date-fns/locale";
 import { api } from "~/trpc/react";
-import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
+import { Card, CardContent } from "~/components/ui/card";
 import { Skeleton } from "~/components/ui/skeleton";
 import { Package, AlertTriangle, RefreshCw, CheckCircle } from "lucide-react";
 
@@ -25,14 +26,11 @@ export function InventoryOverview({ warehouse }: InventoryOverviewProps) {
 
   if (isLoading) {
     return (
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-3 sm:gap-3">
         {[1, 2, 3].map((i) => (
           <Card key={i}>
-            <CardHeader className="pb-2">
-              <Skeleton className="h-4 w-24" />
-            </CardHeader>
-            <CardContent>
-              <Skeleton className="h-8 w-16" />
+            <CardContent className="py-2">
+              <Skeleton className="h-10 w-full" />
             </CardContent>
           </Card>
         ))}
@@ -46,7 +44,7 @@ export function InventoryOverview({ warehouse }: InventoryOverviewProps) {
 
   const cards = [
     {
-      label: "Всего товаров",
+      label: "Товаров",
       value: stats.totalProducts.toLocaleString("ru-RU"),
       icon: Package,
       iconClassName: "text-primary",
@@ -60,7 +58,7 @@ export function InventoryOverview({ warehouse }: InventoryOverviewProps) {
       bgClassName: stats.lowStockCount > 0 ? "bg-amber-500/10" : "bg-emerald-500/10",
     },
     {
-      label: "Синхронизация",
+      label: "Синхр.",
       value: stats.lastSyncAt
         ? formatDistanceToNow(stats.lastSyncAt, {
             addSuffix: true,
@@ -68,31 +66,29 @@ export function InventoryOverview({ warehouse }: InventoryOverviewProps) {
           })
         : "—",
       icon: RefreshCw,
-      iconClassName: "text-violet-500",
-      bgClassName: "bg-violet-500/10",
+      iconClassName: "text-blue-500",
+      bgClassName: "bg-blue-500/10",
       subIcon: stats.lastSyncAt ? CheckCircle : undefined,
       subIconClassName: "text-emerald-500",
     },
   ];
 
   return (
-    <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
+    <div className="grid grid-cols-1 gap-2 sm:grid-cols-3 sm:gap-3">
       {cards.map((card) => (
-        <Card key={card.label}>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="truncate text-xs font-medium text-muted-foreground sm:text-sm">
-              {card.label}
-            </CardTitle>
-            <div className={`shrink-0 rounded-lg p-1.5 sm:p-2 ${card.bgClassName}`}>
-              <card.icon className={`size-3.5 sm:size-4 ${card.iconClassName}`} />
+        <Card key={card.label} className="border-border/50">
+          <CardContent className="flex items-center gap-3 py-2">
+            <div className={`shrink-0 rounded-md p-1.5 ${card.bgClassName}`}>
+              <card.icon className={`size-4 ${card.iconClassName}`} />
             </div>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-end gap-2">
-              <span className="text-xl font-bold sm:text-2xl">{card.value}</span>
-              {card.subIcon && (
-                <card.subIcon className={`mb-0.5 size-4 sm:mb-1 sm:size-5 ${card.subIconClassName}`} />
-              )}
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-xs text-muted-foreground">{card.label}</p>
+              <div className="flex items-center gap-1.5">
+                <span className="text-lg font-semibold leading-tight">{card.value}</span>
+                {card.subIcon && (
+                  <card.subIcon className={`size-3.5 ${card.subIconClassName}`} />
+                )}
+              </div>
             </div>
           </CardContent>
         </Card>

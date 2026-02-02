@@ -2,6 +2,7 @@
 
 /**
  * Лента последней активности (транзакции)
+ * Issue #4, #5: Compact layout, information density
  */
 
 import { formatDistanceToNow } from "date-fns";
@@ -39,16 +40,16 @@ const typeIcons: Record<string, React.ComponentType<{ className?: string }>> = {
 const typeLabels: Record<string, string> = {
   intake: "Приёмка",
   picking: "Отгрузка",
-  transfer: "Перемещение",
-  adjustment: "Корректировка",
-  update: "Обновление",
+  transfer: "Перемещ.",
+  adjustment: "Коррект.",
+  update: "Обновл.",
 };
 
 const typeColors: Record<string, string> = {
-  intake: "text-emerald-500",
-  picking: "text-amber-500",
+  intake: "text-emerald-600",
+  picking: "text-amber-600",
   transfer: "text-primary",
-  adjustment: "text-violet-500",
+  adjustment: "text-violet-600",
   update: "text-muted-foreground",
 };
 
@@ -69,13 +70,13 @@ export function RecentActivityFeed({
 
   if (isLoading) {
     return (
-      <Card>
-        <CardHeader className="pb-2">
-          <Skeleton className="h-5 w-40" />
+      <Card className="border-border/50">
+        <CardHeader className="pb-1.5">
+          <Skeleton className="h-4 w-32" />
         </CardHeader>
-        <CardContent className="space-y-3">
+        <CardContent className="space-y-1.5">
           {[1, 2, 3, 4, 5].map((i) => (
-            <Skeleton key={i} className="h-14" />
+            <Skeleton key={i} className="h-10" />
           ))}
         </CardContent>
       </Card>
@@ -109,27 +110,27 @@ export function RecentActivityFeed({
   ].slice(0, limit);
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="flex items-center gap-2 text-sm font-medium">
-          <Activity className="size-4 text-primary" />
-          Последние операции
+    <Card className="border-border/50">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1.5">
+        <CardTitle className="flex items-center gap-1.5 text-sm font-medium">
+          <Activity className="size-3.5 text-primary" />
+          Операции
         </CardTitle>
-        <Badge variant={isConnected ? "default" : "secondary"} className="gap-1.5">
+        <Badge variant={isConnected ? "default" : "secondary"} className="h-5 gap-1 px-1.5 text-[10px]">
           <span className={`size-1.5 rounded-full ${isConnected ? "bg-emerald-400" : "bg-muted-foreground"}`} />
-          {isConnected ? "Live" : "Offline"}
+          {isConnected ? "Live" : "Off"}
         </Badge>
       </CardHeader>
 
       <CardContent>
         {combinedActivity.length === 0 ? (
-          <div className="flex flex-col items-center gap-2 py-8">
-            <Inbox className="size-10 text-muted-foreground" />
-            <p className="text-sm text-muted-foreground">Нет операций</p>
+          <div className="flex items-center justify-center gap-2 py-4">
+            <Inbox className="size-5 text-muted-foreground" />
+            <p className="text-xs text-muted-foreground">Нет операций</p>
           </div>
         ) : (
-          <ScrollArea className="h-[350px]">
-            <div className="space-y-2">
+          <ScrollArea className="h-[240px]">
+            <div className="space-y-1">
               {combinedActivity.map((item) => {
                 const IconComponent = typeIcons[item.type] ?? RefreshCw;
                 const iconColor = typeColors[item.type] ?? "text-muted-foreground";
@@ -137,37 +138,37 @@ export function RecentActivityFeed({
                 return (
                   <div
                     key={item.id}
-                    className={`flex items-center gap-3 rounded-lg p-3 transition-colors hover:bg-secondary/50 ${
+                    className={`flex items-center gap-2 rounded-md px-2 py-1.5 transition-colors hover:bg-secondary/50 ${
                       item.isRealtime ? "bg-emerald-500/5 ring-1 ring-emerald-500/20" : "bg-secondary/30"
                     }`}
                   >
-                    <div className={`rounded-lg bg-secondary p-2 ${iconColor}`}>
-                      <IconComponent className="size-4" />
+                    <div className={`rounded-md bg-secondary/50 p-1 ${iconColor}`}>
+                      <IconComponent className="size-3" />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
-                        <p className="truncate text-sm font-medium">
+                      <div className="flex items-center gap-1">
+                        <p className="truncate text-xs font-medium leading-tight">
                           {item.name ?? item.sku}
                         </p>
                         {item.isRealtime && (
-                          <Badge variant="outline" className="h-5 border-emerald-500/30 px-1.5 text-[10px] text-emerald-500">
+                          <Badge variant="outline" className="h-4 border-emerald-500/30 px-1 text-[8px] text-emerald-600">
                             LIVE
                           </Badge>
                         )}
                       </div>
-                      <p className="text-xs text-muted-foreground">
+                      <p className="text-[10px] text-muted-foreground">
                         {typeLabels[item.type] ?? item.type} • {item.warehouse ?? "—"}
                       </p>
                     </div>
                     <div className="text-right">
                       <p
-                        className={`font-mono text-sm font-bold ${
-                          item.quantity > 0 ? "text-emerald-500" : "text-destructive"
+                        className={`font-mono text-xs font-semibold ${
+                          item.quantity > 0 ? "text-emerald-600" : "text-destructive"
                         }`}
                       >
                         {item.quantity > 0 ? `+${item.quantity}` : item.quantity}
                       </p>
-                      <p className="text-xs text-muted-foreground">
+                      <p className="text-[9px] text-muted-foreground">
                         {formatDistanceToNow(item.createdAt, {
                           addSuffix: true,
                           locale: ru,

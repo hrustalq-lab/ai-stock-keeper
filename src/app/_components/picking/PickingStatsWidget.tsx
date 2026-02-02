@@ -3,6 +3,7 @@
 import Link from "next/link";
 /**
  * Виджет статистики сборки для Dashboard
+ * Updated: Compact layout, restrained colors
  */
 
 import { api } from "~/trpc/react";
@@ -19,11 +20,11 @@ export function PickingStatsWidget({ warehouse }: PickingStatsWidgetProps) {
 
   if (isLoading) {
     return (
-      <div className="rounded-xl border border-zinc-700/50 bg-zinc-800/30 p-4">
-        <div className="mb-4 h-5 w-32 animate-pulse rounded bg-zinc-700" />
-        <div className="grid grid-cols-4 gap-3">
+      <div className="rounded-lg border border-border/50 bg-card p-3">
+        <div className="mb-3 h-4 w-28 animate-pulse rounded bg-muted" />
+        <div className="grid grid-cols-4 gap-2">
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="h-16 animate-pulse rounded-lg bg-zinc-700/50" />
+            <div key={i} className="h-12 animate-pulse rounded-md bg-muted" />
           ))}
         </div>
       </div>
@@ -36,73 +37,73 @@ export function PickingStatsWidget({ warehouse }: PickingStatsWidgetProps) {
 
   const metricCards = [
     {
-      label: "Завершено",
+      label: "Готово",
       value: stats.completedLists,
       icon: "✅",
-      color: "text-green-400",
+      color: "text-chart-2", // emerald from design system
     },
     {
-      label: "Среднее время",
-      value: `${stats.avgPickingMins} мин`,
+      label: "Ср. время",
+      value: `${stats.avgPickingMins}м`,
       icon: "⏱",
-      color: "text-blue-400",
+      color: "text-chart-1", // cyan (primary) from design system
     },
     {
-      label: "Picks/час",
+      label: "Picks/ч",
       value: stats.picksPerHour.toFixed(1),
       icon: "📦",
-      color: "text-purple-400",
+      color: "text-chart-4", // violet from design system
     },
     {
-      label: "Точность",
-      value: `${(stats.accuracy * 100).toFixed(1)}%`,
+      label: "Точн.",
+      value: `${(stats.accuracy * 100).toFixed(0)}%`,
       icon: "🎯",
-      color: "text-amber-400",
+      color: "text-chart-3", // amber from design system
     },
   ];
 
   return (
-    <div className="rounded-xl border border-zinc-700/50 bg-zinc-800/30">
-      <div className="flex items-center justify-between border-b border-zinc-700/50 px-4 py-3">
-        <h3 className="flex items-center gap-2 font-semibold text-white">
-          <span>📋</span>
+    <div className="rounded-lg border border-border/50 bg-card">
+      <div className="flex items-center justify-between border-b border-border/50 px-3 py-2">
+        <h3 className="flex items-center gap-1.5 text-sm font-medium text-foreground">
+          <span className="text-base">📋</span>
           Сборка сегодня
         </h3>
         <Link
           href="/picking"
-          className="text-sm text-blue-400 transition-colors hover:text-blue-300"
+          className="text-xs text-primary transition-colors hover:text-primary/80"
         >
-          Подробнее →
+          Ещё →
         </Link>
       </div>
 
-      <div className="p-4">
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+      <div className="p-3">
+        <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
           {metricCards.map((card, i) => (
             <div
               key={i}
-              className="rounded-lg bg-zinc-700/30 p-3 text-center transition-colors hover:bg-zinc-700/50"
+              className="rounded-md bg-secondary/40 px-2 py-2 text-center transition-colors hover:bg-secondary/60"
             >
-              <div className="mb-1 text-xl">{card.icon}</div>
-              <div className={`text-xl font-bold ${card.color}`}>
+              <div className="mb-0.5 text-base">{card.icon}</div>
+              <div className={`text-base font-semibold ${card.color}`}>
                 {card.value}
               </div>
-              <div className="text-xs text-zinc-400">{card.label}</div>
+              <div className="text-[10px] text-muted-foreground">{card.label}</div>
             </div>
           ))}
         </div>
 
-        {/* Дополнительная статистика */}
-        <div className="mt-4 flex items-center justify-between rounded-lg bg-zinc-700/20 px-4 py-2 text-sm">
-          <span className="text-zinc-400">
-            Всего листов: <span className="text-white">{stats.totalLists}</span>
+        {/* Дополнительная статистика - compact */}
+        <div className="mt-3 flex items-center justify-between rounded-md bg-muted/30 px-3 py-1.5 text-[10px]">
+          <span className="text-muted-foreground">
+            Листов: <span className="font-medium text-foreground">{stats.totalLists}</span>
           </span>
-          <span className="text-zinc-400">
-            Позиций: <span className="text-white">{stats.totalItems}</span>
+          <span className="text-muted-foreground">
+            Позиций: <span className="font-medium text-foreground">{stats.totalItems}</span>
           </span>
-          <span className="text-zinc-400">
-            Недостач:{" "}
-            <span className={stats.shortageRate > 0.01 ? "text-red-400" : "text-green-400"}>
+          <span className="text-muted-foreground">
+            Недост.:{" "}
+            <span className={stats.shortageRate > 0.01 ? "font-medium text-destructive" : "font-medium text-chart-2"}>
               {(stats.shortageRate * 100).toFixed(1)}%
             </span>
           </span>

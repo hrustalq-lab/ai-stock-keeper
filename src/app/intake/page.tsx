@@ -260,13 +260,13 @@ export default function IntakePage() {
         }
       />
 
-      {/* Progress Steps */}
-      <div className="border-b px-4 py-3 md:px-6">
+      {/* Progress Steps - compact */}
+      <div className="border-b px-3 py-2 md:px-4">
         <div className="mx-auto flex max-w-2xl items-center justify-between">
           {steps.map((s, index) => (
             <div key={s.id} className="flex items-center">
               <div
-                className={`flex items-center gap-2 rounded-full px-3 py-1.5 text-sm transition-colors ${
+                className={`flex items-center gap-1.5 rounded-full px-2 py-1 text-xs transition-colors ${
                   step === s.id
                     ? "bg-primary/10 text-primary"
                     : currentStepIndex > index
@@ -274,12 +274,12 @@ export default function IntakePage() {
                       : "text-muted-foreground/50"
                 }`}
               >
-                <s.icon className="size-4" />
+                <s.icon className="size-3.5" />
                 <span className="hidden sm:inline">{s.label}</span>
               </div>
               {index < steps.length - 1 && (
                 <div
-                  className={`mx-2 h-px w-6 sm:w-10 ${
+                  className={`mx-1.5 h-px w-4 sm:w-8 ${
                     currentStepIndex > index ? "bg-primary/50" : "bg-border"
                   }`}
                 />
@@ -289,8 +289,8 @@ export default function IntakePage() {
         </div>
       </div>
 
-      <main className="flex-1 p-4 md:p-6">
-        <div className="mx-auto max-w-2xl space-y-6">
+      <main className="flex-1 p-3 md:p-4">
+        <div className="mx-auto max-w-2xl space-y-4">
           {/* Ошибка */}
           {error && (
             <Card className="border-destructive/50 bg-destructive/5">
@@ -348,11 +348,11 @@ export default function IntakePage() {
 
               {/* Распознанный код */}
               {scannedCode && (
-                <Card className="border-emerald-500/30 bg-emerald-500/5">
+                <Card className="border-chart-2/30 bg-chart-2/5">
                   <CardContent className="flex items-center justify-between py-4">
                     <div>
                       <p className="text-sm text-muted-foreground">Распознанный код:</p>
-                      <code className="mt-1 text-lg font-bold text-emerald-500">{scannedCode}</code>
+                      <code className="mt-1 text-lg font-bold text-chart-2">{scannedCode}</code>
                     </div>
                     <div className="flex items-center gap-2">
                       {matchProductQuery.isLoading && (

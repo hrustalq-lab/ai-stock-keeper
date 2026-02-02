@@ -2,6 +2,7 @@
 
 /**
  * График уровня запасов (Recharts)
+ * Issue #3, #4: Restrained colors, compact layout
  */
 
 import {
@@ -39,12 +40,12 @@ export function StockLevelChart({
 
   if (isLoading) {
     return (
-      <Card>
-        <CardHeader className="pb-2">
-          <Skeleton className="h-5 w-40" />
+      <Card className="border-border/50">
+        <CardHeader className="pb-1.5">
+          <Skeleton className="h-4 w-32" />
         </CardHeader>
         <CardContent>
-          <Skeleton className="h-[180px] sm:h-[250px]" />
+          <Skeleton className="h-[140px] sm:h-[180px]" />
         </CardContent>
       </Card>
     );
@@ -57,38 +58,38 @@ export function StockLevelChart({
       : generateMockData(days);
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="flex items-center gap-2 text-sm font-medium">
-          <BarChart3 className="size-4 text-primary" />
+    <Card className="border-border/50">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1.5">
+        <CardTitle className="flex items-center gap-1.5 text-sm font-medium">
+          <BarChart3 className="size-3.5 text-primary" />
           Уровень запасов
         </CardTitle>
-        <Badge variant="outline">{days} дней</Badge>
+        <Badge variant="outline" className="h-5 px-1.5 text-[10px]">{days}д</Badge>
       </CardHeader>
 
-      <CardContent className="pt-2 sm:pt-4">
-        <div className="h-[180px] sm:h-[250px]">
+      <CardContent className="pt-1">
+        <div className="h-[140px] sm:h-[180px]">
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart
               data={chartData}
-              margin={{ top: 10, right: 5, left: -10, bottom: 0 }}
+              margin={{ top: 5, right: 5, left: -15, bottom: 0 }}
             >
             <defs>
               <linearGradient id="stockGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="oklch(0.75 0.15 195)" stopOpacity={0.3} />
-                <stop offset="95%" stopColor="oklch(0.75 0.15 195)" stopOpacity={0} />
+                <stop offset="5%" stopColor="#2563eb" stopOpacity={0.2} />
+                <stop offset="95%" stopColor="#2563eb" stopOpacity={0} />
               </linearGradient>
             </defs>
             <CartesianGrid
               strokeDasharray="3 3"
-              stroke="oklch(0.28 0.005 285)"
+              stroke="#e2e8f0"
               vertical={false}
             />
             <XAxis
               dataKey="date"
-              tick={{ fill: "oklch(0.65 0.01 285)", fontSize: 10 }}
+              tick={{ fill: "#64748b", fontSize: 9 }}
               tickLine={false}
-              axisLine={{ stroke: "oklch(0.28 0.005 285)" }}
+              axisLine={{ stroke: "#e2e8f0" }}
               tickFormatter={(value: string) => {
                 const date = new Date(value);
                 return date.toLocaleDateString("ru-RU", {
@@ -99,17 +100,18 @@ export function StockLevelChart({
               interval="preserveStartEnd"
             />
             <YAxis
-              tick={{ fill: "oklch(0.65 0.01 285)", fontSize: 10 }}
+              tick={{ fill: "#64748b", fontSize: 9 }}
               tickLine={false}
               axisLine={false}
-              width={35}
+              width={30}
             />
             <Tooltip
               contentStyle={{
-                backgroundColor: "oklch(0.16 0.005 285)",
-                border: "1px solid oklch(0.28 0.005 285)",
-                borderRadius: "8px",
-                color: "oklch(0.98 0 0)",
+                backgroundColor: "#ffffff",
+                border: "1px solid #e2e8f0",
+                borderRadius: "6px",
+                color: "#333333",
+                fontSize: "12px",
               }}
               labelFormatter={(value) => {
                 const date = new Date(String(value));
@@ -127,8 +129,8 @@ export function StockLevelChart({
             <Area
               type="monotone"
               dataKey="quantity"
-              stroke="oklch(0.75 0.15 195)"
-              strokeWidth={2}
+              stroke="#2563eb"
+              strokeWidth={1.5}
               fill="url(#stockGradient)"
             />
           </AreaChart>

@@ -87,6 +87,10 @@ export function BarcodeScanner({
       
       setHasPermission(true);
 
+      // Используем фиксированные размеры для предотвращения NaN ошибок
+      const targetWidth = Math.max(rect.width, 640);
+      const targetHeight = Math.max(rect.height, 480);
+
       await Quagga.init(
         {
           inputStream: {
@@ -94,8 +98,14 @@ export function BarcodeScanner({
             target: target,
             constraints: {
               facingMode: "environment", // Задняя камера
-              width: { min: 640, ideal: 1280, max: 1920 },
-              height: { min: 480, ideal: 720, max: 1080 },
+              width: { min: 320, ideal: targetWidth, max: 1920 },
+              height: { min: 240, ideal: targetHeight, max: 1080 },
+            },
+            area: { // Ограничиваем область сканирования
+              top: "20%",
+              right: "10%",
+              left: "10%",
+              bottom: "20%",
             },
           },
           decoder: {
@@ -234,10 +244,10 @@ export function BarcodeScanner({
   if (hasPermission === false) {
     return (
       <div
-        className={`flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-red-400/50 bg-red-950/20 p-8 ${className}`}
+        className={`flex flex-col items-center justify-center rounded-lg border border-dashed border-destructive/30 bg-destructive/5 p-6 ${className}`}
       >
         <svg
-          className="mb-4 h-12 w-12 text-red-400"
+          className="mb-3 size-8 text-destructive"
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
@@ -249,10 +259,10 @@ export function BarcodeScanner({
             d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"
           />
         </svg>
-        <p className="text-center text-red-300">
+        <p className="text-center text-sm text-destructive">
           Нет доступа к камере
         </p>
-        <p className="mt-2 text-center text-sm text-red-400/70">
+        <p className="mt-1 text-center text-xs text-muted-foreground">
           Разрешите доступ в настройках браузера
         </p>
       </div>
@@ -260,43 +270,43 @@ export function BarcodeScanner({
   }
 
   return (
-    <div className={`relative overflow-hidden rounded-2xl bg-black ${className}`}>
+    <div className={`relative overflow-hidden rounded-lg bg-background ${className}`}>
       {/* Видеопоток */}
       <div
         ref={scannerRef}
-        className="relative aspect-video w-full"
-        style={{ minHeight: "240px" }}
+        className="relative aspect-video w-full bg-muted"
+        style={{ minHeight: "240px", minWidth: "320px" }}
       />
 
       {/* Рамка сканирования */}
       <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-        <div className="relative h-32 w-64 rounded-lg border-2 border-emerald-400/70 shadow-[0_0_20px_rgba(52,211,153,0.3)]">
+        <div className="relative h-24 w-48 rounded-md border-2 border-primary/60 shadow-[0_0_16px_rgba(var(--primary),0.2)]">
           {/* Угловые маркеры */}
-          <div className="absolute -left-1 -top-1 h-4 w-4 border-l-4 border-t-4 border-emerald-400" />
-          <div className="absolute -right-1 -top-1 h-4 w-4 border-r-4 border-t-4 border-emerald-400" />
-          <div className="absolute -bottom-1 -left-1 h-4 w-4 border-b-4 border-l-4 border-emerald-400" />
-          <div className="absolute -bottom-1 -right-1 h-4 w-4 border-b-4 border-r-4 border-emerald-400" />
+          <div className="absolute -left-0.5 -top-0.5 size-3 border-l-2 border-t-2 border-primary" />
+          <div className="absolute -right-0.5 -top-0.5 size-3 border-r-2 border-t-2 border-primary" />
+          <div className="absolute -bottom-0.5 -left-0.5 size-3 border-b-2 border-l-2 border-primary" />
+          <div className="absolute -bottom-0.5 -right-0.5 size-3 border-b-2 border-r-2 border-primary" />
         </div>
       </div>
 
       {/* Индикатор статуса */}
-      <div className="absolute bottom-4 left-4 flex items-center gap-2 rounded-full bg-black/60 px-3 py-1.5 backdrop-blur-sm">
+      <div className="absolute bottom-3 left-3 flex items-center gap-1.5 rounded-md bg-background/80 px-2 py-1 backdrop-blur-sm">
         <div
-          className={`h-2 w-2 rounded-full ${
+          className={`size-1.5 rounded-full ${
             isInitialized
-              ? "animate-pulse bg-emerald-400"
-              : "bg-yellow-400"
+              ? "animate-pulse bg-primary"
+              : "bg-amber-500"
           }`}
         />
-        <span className="text-xs text-white/80">
-          {isInitialized ? "Сканирование..." : "Запуск камеры..."}
+        <span className="text-[10px] text-foreground">
+          {isInitialized ? "Сканирование..." : "Запуск..."}
         </span>
       </div>
 
       {/* Последний отсканированный код */}
       {lastScannedCode && (
-        <div className="absolute right-4 top-4 rounded-lg bg-emerald-500/90 px-3 py-2 shadow-lg backdrop-blur-sm">
-          <p className="font-mono text-sm font-medium text-white">
+        <div className="absolute right-3 top-3 rounded-md bg-primary/90 px-2 py-1 shadow-md backdrop-blur-sm">
+          <p className="font-mono text-xs font-medium text-primary-foreground">
             {lastScannedCode}
           </p>
         </div>

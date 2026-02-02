@@ -109,10 +109,10 @@ export default function PickingDetailPage() {
   // Loading state
   if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-zinc-900">
+      <div className="flex min-h-screen items-center justify-center bg-background">
         <div className="text-center">
-          <div className="mb-4 text-4xl">📦</div>
-          <div className="text-zinc-400">Загрузка...</div>
+          <div className="mb-3 text-3xl">📦</div>
+          <div className="text-sm text-muted-foreground">Загрузка...</div>
         </div>
       </div>
     );
@@ -121,13 +121,13 @@ export default function PickingDetailPage() {
   // Not found
   if (!list) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-zinc-900">
+      <div className="flex min-h-screen items-center justify-center bg-background">
         <div className="text-center">
-          <div className="mb-4 text-4xl">❌</div>
-          <div className="text-zinc-400">Лист сборки не найден</div>
+          <div className="mb-3 text-3xl">❌</div>
+          <div className="text-sm text-muted-foreground">Лист не найден</div>
           <button
             onClick={() => router.push("/picking")}
-            className="mt-4 rounded-lg bg-zinc-700 px-4 py-2 text-white"
+            className="mt-3 rounded-md bg-secondary px-3 py-1.5 text-sm font-medium text-foreground"
           >
             Назад
           </button>
@@ -142,21 +142,21 @@ export default function PickingDetailPage() {
   const inProgress = list.status === "in_progress";
 
   return (
-    <div className="min-h-screen bg-zinc-900 pb-24">
-      {/* Шапка */}
-      <header className="sticky top-0 z-10 border-b border-zinc-700/50 bg-zinc-800/90 px-4 py-3 backdrop-blur-sm">
+    <div className="min-h-screen bg-background pb-20">
+      {/* Шапка - compact */}
+      <header className="sticky top-0 z-10 border-b border-border/50 bg-background/95 px-3 py-2 backdrop-blur-sm">
         <div className="flex items-center justify-between">
           <button
             onClick={() => router.push("/picking")}
-            className="flex h-10 w-10 items-center justify-center rounded-lg text-zinc-400 transition-colors hover:bg-zinc-700 hover:text-white"
+            className="flex size-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
           >
             ←
           </button>
           <div className="text-center">
-            <div className="font-mono text-sm text-zinc-400">
+            <div className="font-mono text-xs text-foreground">
               {list.listNumber}
             </div>
-            <div className="text-xs text-zinc-500">
+            <div className="text-[10px] text-muted-foreground">
               {list.pickingType === "batch" && "Batch"}
               {list.pickingType === "wave" && "Wave"}
               {list.pickingType === "single" && "Одиночный"}
@@ -164,14 +164,14 @@ export default function PickingDetailPage() {
               {list.warehouse}
             </div>
           </div>
-          <div className="w-10" />
+          <div className="w-8" />
         </div>
       </header>
 
-      <main className="px-4 py-4">
+      <main className="px-3 py-3">
         {/* Прогресс */}
         {progress && (
-          <div className="mb-4">
+          <div className="mb-3">
             <PickingProgress
               total={progress.total}
               completed={progress.completed}
@@ -185,11 +185,11 @@ export default function PickingDetailPage() {
 
         {/* Кнопка старта */}
         {canStart && (
-          <div className="mb-4">
+          <div className="mb-3">
             <button
               onClick={handleStart}
               disabled={startMutation.isPending}
-              className="w-full rounded-xl bg-blue-600 py-4 text-lg font-bold text-white transition-colors hover:bg-blue-500 disabled:opacity-50"
+              className="w-full rounded-lg bg-primary py-3 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
             >
               {startMutation.isPending ? "Запуск..." : "▶ Начать сборку"}
             </button>
@@ -198,12 +198,12 @@ export default function PickingDetailPage() {
 
         {/* Список позиций */}
         {inProgress && (
-          <div className="space-y-4">
+          <div className="space-y-3">
             {/* Активная позиция */}
             {items[activeItemIndex]?.status === "pending" && (
-              <div className="mb-6">
-                <div className="mb-2 text-sm font-medium text-zinc-400">
-                  📍 Следующая позиция
+              <div className="mb-4">
+                <div className="mb-1.5 text-xs font-medium text-muted-foreground">
+                  📍 Следующая
                 </div>
                 <PickingItemCard
                   item={items[activeItemIndex]}
@@ -215,11 +215,11 @@ export default function PickingDetailPage() {
             )}
 
             {/* Остальные позиции (свёрнуто) */}
-            <details className="rounded-xl border border-zinc-700/50 bg-zinc-800/30">
-              <summary className="cursor-pointer px-4 py-3 text-sm font-medium text-zinc-300">
+            <details className="rounded-lg border border-border/50 bg-card">
+              <summary className="cursor-pointer px-3 py-2 text-xs font-medium text-foreground">
                 📋 Все позиции ({items.length})
               </summary>
-              <div className="space-y-3 p-4 pt-0">
+              <div className="space-y-2 p-3 pt-0">
                 {items.map((item, index) => (
                   <div
                     key={item.id}
@@ -228,32 +228,32 @@ export default function PickingDetailPage() {
                         setActiveItemIndex(index);
                       }
                     }}
-                    className={`cursor-pointer rounded-lg border p-3 transition-colors ${
+                    className={`cursor-pointer rounded-md border p-2 transition-colors ${
                       item.status === "picked"
-                        ? "border-green-500/30 bg-green-500/10"
+                        ? "border-emerald-500/30 bg-emerald-500/5"
                         : item.status === "shortage"
-                          ? "border-red-500/30 bg-red-500/10"
+                          ? "border-destructive/30 bg-destructive/5"
                           : item.status === "skipped"
-                            ? "border-amber-500/30 bg-amber-500/10"
+                            ? "border-amber-500/30 bg-amber-500/5"
                             : index === activeItemIndex
-                              ? "border-blue-500 bg-blue-500/10"
-                              : "border-zinc-700/50 bg-zinc-800/50"
+                              ? "border-primary bg-primary/5"
+                              : "border-border/50 bg-secondary/30"
                     }`}
                   >
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <span className="flex h-6 w-6 items-center justify-center rounded-full bg-zinc-700/50 text-xs font-bold text-white">
+                      <div className="flex items-center gap-1.5">
+                        <span className="flex size-5 items-center justify-center rounded-full bg-muted text-[10px] font-bold text-foreground">
                           {item.sequenceNum}
                         </span>
-                        <span className="font-medium text-white">
+                        <span className="text-xs font-medium text-foreground">
                           {item.productName}
                         </span>
                       </div>
-                      <span className="font-mono text-sm text-zinc-400">
+                      <span className="font-mono text-[10px] text-muted-foreground">
                         {item.locationCode}
                       </span>
                     </div>
-                    <div className="mt-1 flex items-center justify-between text-sm text-zinc-400">
+                    <div className="mt-1 flex items-center justify-between text-[10px] text-muted-foreground">
                       <span>{item.sku}</span>
                       <span>
                         {item.status === "picked"
@@ -274,12 +274,12 @@ export default function PickingDetailPage() {
 
         {/* Completed state */}
         {list.status === "completed" && (
-          <div className="rounded-xl border border-green-500/30 bg-green-500/10 p-6 text-center">
-            <div className="mb-2 text-4xl">✅</div>
-            <div className="text-lg font-bold text-green-400">
+          <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/5 p-4 text-center">
+            <div className="mb-1.5 text-2xl">✅</div>
+            <div className="text-sm font-semibold text-emerald-600">
               Сборка завершена
             </div>
-            <div className="mt-2 text-sm text-zinc-400">
+            <div className="mt-1 text-xs text-muted-foreground">
               Время: {list.actualMins} мин
             </div>
           </div>
@@ -288,13 +288,13 @@ export default function PickingDetailPage() {
 
       {/* Нижняя панель */}
       {inProgress && allCompleted && (
-        <div className="fixed bottom-0 left-0 right-0 border-t border-zinc-700/50 bg-zinc-800/95 p-4 backdrop-blur-sm">
+        <div className="fixed bottom-0 left-0 right-0 border-t border-border/50 bg-background/95 p-3 backdrop-blur-sm pb-safe">
           <button
             onClick={handleComplete}
             disabled={completeMutation.isPending}
-            className="w-full rounded-xl bg-green-600 py-4 text-lg font-bold text-white transition-colors hover:bg-green-500 disabled:opacity-50"
+            className="w-full rounded-lg bg-emerald-600 py-3 text-sm font-semibold text-white transition-colors hover:bg-emerald-500 disabled:opacity-50"
           >
-            {completeMutation.isPending ? "Завершение..." : "🏁 Завершить сборку"}
+            {completeMutation.isPending ? "Завершение..." : "🏁 Завершить"}
           </button>
         </div>
       )}

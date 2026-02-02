@@ -162,81 +162,76 @@ export default function AlertSettingsPage() {
         }
       />
 
-      <main className="flex-1 p-4 md:p-6">
+      <main className="flex-1 p-3 md:p-4">
         {/* Create Button */}
         {!isCreating && (
-          <Button onClick={() => setIsCreating(true)} className="mb-6">
-            <Plus className="mr-2 size-4" />
+          <Button onClick={() => setIsCreating(true)} className="mb-4 h-8 text-xs">
+            <Plus className="mr-1.5 size-3.5" />
             Создать правило
           </Button>
         )}
 
-        {/* Create/Edit Form */}
+        {/* Create/Edit Form - compact */}
         {isCreating && (
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle>
-                {editingId ? "Редактировать правило" : "Новое правило"}
+          <Card className="mb-4 border-border/50">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm">
+                {editingId ? "Редактировать" : "Новое правило"}
               </CardTitle>
-              <CardDescription>
-                Настройте условия срабатывания и канал уведомления
+              <CardDescription className="text-xs">
+                Настройте условия и канал уведомления
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="grid gap-4 md:grid-cols-2">
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="grid gap-3 md:grid-cols-2">
                   {/* Название */}
                   <div className="md:col-span-2">
-                    <label className="mb-2 block text-sm font-medium">
-                      Название *
-                    </label>
+                    <label className="mb-1 block text-xs font-medium">Название *</label>
                     <Input
                       value={form.name}
                       onChange={(e) => setForm({ ...form, name: e.target.value })}
                       required
-                      placeholder="Низкий остаток болтов"
+                      placeholder="Низкий остаток"
+                      className="h-8 text-sm"
                     />
                   </div>
 
                   {/* SKU */}
                   <div>
-                    <label className="mb-2 block text-sm font-medium">
-                      SKU (пусто = все товары)
-                    </label>
+                    <label className="mb-1 block text-xs font-medium">SKU</label>
                     <Input
                       value={form.sku}
                       onChange={(e) => setForm({ ...form, sku: e.target.value })}
-                      placeholder="SKU-001"
+                      placeholder="Все товары"
+                      className="h-8 text-sm"
                     />
                   </div>
 
                   {/* Склад */}
                   <div>
-                    <label className="mb-2 block text-sm font-medium">
-                      Склад (пусто = все склады)
-                    </label>
+                    <label className="mb-1 block text-xs font-medium">Склад</label>
                     <Input
                       value={form.warehouse}
                       onChange={(e) => setForm({ ...form, warehouse: e.target.value })}
-                      placeholder="warehouse_main"
+                      placeholder="Все склады"
+                      className="h-8 text-sm"
                     />
                   </div>
 
                   {/* Условие */}
                   <div>
-                    <label className="mb-2 block text-sm font-medium">
-                      Условие *
-                    </label>
+                    <label className="mb-1 block text-xs font-medium">Условие *</label>
                     <Select
                       value={form.condition}
                       onValueChange={(val) => setForm({ ...form, condition: val as "below" | "above" | "equals" })}
                     >
-                      <SelectTrigger>
+                      <SelectTrigger className="h-8 text-sm">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="below">Ниже (меньше)</SelectItem>
-                        <SelectItem value="above">Выше (больше)</SelectItem>
+                        <SelectItem value="below">Ниже</SelectItem>
+                        <SelectItem value="above">Выше</SelectItem>
                         <SelectItem value="equals">Равно</SelectItem>
                       </SelectContent>
                     </Select>
@@ -244,28 +239,25 @@ export default function AlertSettingsPage() {
 
                   {/* Порог */}
                   <div>
-                    <label className="mb-2 block text-sm font-medium">
-                      Пороговое значение *
-                    </label>
+                    <label className="mb-1 block text-xs font-medium">Порог *</label>
                     <Input
                       type="number"
                       value={form.threshold}
                       onChange={(e) => setForm({ ...form, threshold: parseInt(e.target.value) || 0 })}
                       min={0}
                       required
+                      className="h-8 text-sm"
                     />
                   </div>
 
                   {/* Канал */}
                   <div>
-                    <label className="mb-2 block text-sm font-medium">
-                      Канал уведомления *
-                    </label>
+                    <label className="mb-1 block text-xs font-medium">Канал *</label>
                     <Select
                       value={form.channel}
                       onValueChange={(val) => setForm({ ...form, channel: val as "email" | "webhook" })}
                     >
-                      <SelectTrigger>
+                      <SelectTrigger className="h-8 text-sm">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -277,46 +269,44 @@ export default function AlertSettingsPage() {
 
                   {/* Получатель */}
                   <div>
-                    <label className="mb-2 block text-sm font-medium">
-                      {form.channel === "email" ? "Email *" : "Webhook URL *"}
+                    <label className="mb-1 block text-xs font-medium">
+                      {form.channel === "email" ? "Email *" : "URL *"}
                     </label>
                     <Input
                       type={form.channel === "email" ? "email" : "url"}
                       value={form.recipient}
                       onChange={(e) => setForm({ ...form, recipient: e.target.value })}
                       required
-                      placeholder={
-                        form.channel === "email"
-                          ? "manager@company.com"
-                          : "https://webhook.site/xxx"
-                      }
+                      placeholder={form.channel === "email" ? "email@example.com" : "https://..."}
+                      className="h-8 text-sm"
                     />
                   </div>
 
                   {/* Cooldown */}
                   <div className="md:col-span-2">
-                    <label className="mb-2 block text-sm font-medium">
-                      Cooldown (минуты между алертами)
-                    </label>
+                    <label className="mb-1 block text-xs font-medium">Cooldown (мин)</label>
                     <Input
                       type="number"
                       value={form.cooldownMins}
                       onChange={(e) => setForm({ ...form, cooldownMins: parseInt(e.target.value) || 60 })}
                       min={0}
                       max={10080}
+                      className="h-8 text-sm"
                     />
                   </div>
                 </div>
 
                 {/* Actions */}
-                <div className="flex gap-3">
+                <div className="flex gap-2">
                   <Button
                     type="submit"
+                    size="sm"
+                    className="h-8 text-xs"
                     disabled={createMutation.isPending || updateMutation.isPending}
                   >
                     {editingId ? "Сохранить" : "Создать"}
                   </Button>
-                  <Button type="button" variant="outline" onClick={handleCancel}>
+                  <Button type="button" variant="outline" size="sm" className="h-8 text-xs" onClick={handleCancel}>
                     Отмена
                   </Button>
                 </div>
@@ -325,48 +315,47 @@ export default function AlertSettingsPage() {
           </Card>
         )}
 
-        {/* Rules List */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Bell className="size-5 text-primary" />
-              Правила алертов
+        {/* Rules List - compact */}
+        <Card className="border-border/50">
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center gap-1.5 text-sm">
+              <Bell className="size-4 text-primary" />
+              Правила
             </CardTitle>
           </CardHeader>
           <CardContent>
             {isLoading ? (
-              <div className="space-y-3">
+              <div className="space-y-2">
                 {[1, 2, 3].map((i) => (
-                  <Skeleton key={i} className="h-16" />
+                  <Skeleton key={i} className="h-12" />
                 ))}
               </div>
             ) : !rules || rules.length === 0 ? (
-              <div className="flex flex-col items-center gap-3 py-12">
-                <Inbox className="size-12 text-muted-foreground" />
-                <p className="text-muted-foreground">Нет правил алертов</p>
-                <Button variant="outline" onClick={() => setIsCreating(true)}>
-                  Создать первое правило
+              <div className="flex flex-col items-center gap-2 py-8">
+                <Inbox className="size-8 text-muted-foreground" />
+                <p className="text-xs text-muted-foreground">Нет правил</p>
+                <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => setIsCreating(true)}>
+                  Создать первое
                 </Button>
               </div>
             ) : (
-              <div className="space-y-3">
+              <div className="space-y-2">
                 {rules.map((rule) => (
                   <div
                     key={rule.id}
-                    className="flex items-center justify-between rounded-lg bg-secondary/30 p-4"
+                    className="flex items-center justify-between rounded-md bg-secondary/30 px-3 py-2"
                   >
                     <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1.5">
                         <span
-                          className={`size-2 rounded-full ${
+                          className={`size-1.5 rounded-full ${
                             rule.isActive ? "bg-emerald-500" : "bg-muted-foreground"
                           }`}
                         />
-                        <h3 className="font-medium">{rule.name}</h3>
+                        <h3 className="truncate text-sm font-medium">{rule.name}</h3>
                       </div>
-                      <p className="mt-1 text-sm text-muted-foreground">
-                        {rule.sku ?? "Все товары"} •{" "}
-                        {rule.warehouse ?? "Все склады"} •{" "}
+                      <p className="mt-0.5 truncate text-[10px] text-muted-foreground">
+                        {rule.sku ?? "Все"} • {rule.warehouse ?? "Все"} •{" "}
                         <span className="font-mono">
                           {rule.condition === "below" && "<"}
                           {rule.condition === "above" && ">"}
@@ -377,47 +366,49 @@ export default function AlertSettingsPage() {
                       </p>
                     </div>
 
-                    <div className="ml-4 flex items-center gap-2">
+                    <div className="ml-2 flex items-center gap-1">
                       <Button
                         variant="ghost"
                         size="icon"
+                        className="size-7"
                         onClick={() => testMutation.mutate({ id: rule.id })}
                         disabled={testMutation.isPending}
-                        title="Тестовое уведомление"
+                        title="Тест"
                       >
-                        <TestTube className="size-4" />
+                        <TestTube className="size-3.5" />
                       </Button>
                       <Button
                         variant="ghost"
                         size="icon"
+                        className={`size-7 ${rule.isActive ? "text-emerald-500" : ""}`}
                         onClick={() => toggleMutation.mutate({ id: rule.id })}
-                        className={rule.isActive ? "text-emerald-500" : ""}
-                        title={rule.isActive ? "Выключить" : "Включить"}
+                        title={rule.isActive ? "Выкл" : "Вкл"}
                       >
                         {rule.isActive ? (
-                          <Power className="size-4" />
+                          <Power className="size-3.5" />
                         ) : (
-                          <PowerOff className="size-4" />
+                          <PowerOff className="size-3.5" />
                         )}
                       </Button>
                       <Button
                         variant="ghost"
                         size="icon"
+                        className="size-7"
                         onClick={() => handleEdit(rule)}
                       >
-                        <Pencil className="size-4" />
+                        <Pencil className="size-3.5" />
                       </Button>
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="text-destructive"
+                        className="size-7 text-destructive"
                         onClick={() => {
-                          if (confirm("Удалить правило?")) {
+                          if (confirm("Удалить?")) {
                             deleteMutation.mutate({ id: rule.id });
                           }
                         }}
                       >
-                        <Trash2 className="size-4" />
+                        <Trash2 className="size-3.5" />
                       </Button>
                     </div>
                   </div>

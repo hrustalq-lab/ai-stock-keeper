@@ -7,6 +7,7 @@ import { cookies } from "next/headers";
 import { TRPCReactProvider } from "~/trpc/react";
 import { SidebarProvider, SidebarInset } from "~/components/ui/sidebar";
 import { AppSidebar } from "~/components/app-sidebar";
+import { BottomNavigation } from "~/components/bottom-navigation";
 
 export const metadata: Metadata = {
   title: "AI Stock Keeper",
@@ -34,9 +35,10 @@ export default async function RootLayout({
         <TRPCReactProvider>
           <SidebarProvider defaultOpen={defaultOpen}>
             <AppSidebar />
-            <SidebarInset>
+            <SidebarInset className="pb-14 md:pb-0">
               {children}
             </SidebarInset>
+            <BottomNavigation />
           </SidebarProvider>
         </TRPCReactProvider>
       </body>

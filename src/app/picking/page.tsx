@@ -169,29 +169,29 @@ export default function PickingPage() {
         }
       />
 
-      <main className="flex-1 p-4 md:p-6">
+      <main className="flex-1 p-3 md:p-4">
         {/* Виджет статистики */}
-        <div className="mb-6">
+        <div className="mb-3">
           <PickingStatsWidget
             warehouse={selectedWarehouse === "all" ? undefined : selectedWarehouse}
           />
         </div>
 
-        {/* Вкладки */}
-        <div className="mb-4 flex flex-wrap gap-2">
+        {/* Вкладки - compact */}
+        <div className="mb-3 flex flex-wrap gap-1.5">
           {tabs.map((tab) => (
             <Button
               key={tab.key}
               variant={activeTab === tab.key ? "default" : "outline"}
               onClick={() => setActiveTab(tab.key)}
               size="sm"
-              className="gap-1.5 text-xs sm:gap-2 sm:text-sm"
+              className="h-7 gap-1 px-2 text-xs"
             >
-              <tab.icon className="size-3.5 sm:size-4" />
+              <tab.icon className="size-3" />
               <span className="hidden sm:inline">{tab.label}</span>
               <span className="sm:hidden">{tab.label.slice(0, 3)}.</span>
               {tab.key === "active" && filteredLists && activeTab !== "active" && (
-                <Badge variant="secondary" className="ml-0.5 text-[10px] sm:ml-1 sm:text-xs">
+                <Badge variant="secondary" className="ml-0.5 h-4 px-1 text-[9px]">
                   {lists?.filter((l) => ["created", "assigned", "in_progress"].includes(l.status)).length ?? 0}
                 </Badge>
               )}
@@ -200,16 +200,16 @@ export default function PickingPage() {
         </div>
 
         {/* Таблица листов */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <ClipboardList className="size-5 text-primary" />
+        <Card className="border-border/50">
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center gap-1.5 text-sm">
+              <ClipboardList className="size-4 text-primary" />
               Листы сборки
             </CardTitle>
-            <CardDescription>
-              {activeTab === "active" && "Активные листы, требующие внимания"}
-              {activeTab === "completed" && "Завершённые листы сборки"}
-              {activeTab === "all" && "Все листы сборки"}
+            <CardDescription className="text-xs">
+              {activeTab === "active" && "Активные листы"}
+              {activeTab === "completed" && "Завершённые"}
+              {activeTab === "all" && "Все листы"}
             </CardDescription>
           </CardHeader>
           <CardContent>

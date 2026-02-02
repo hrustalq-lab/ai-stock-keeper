@@ -224,6 +224,9 @@ jobs:
             # Логинимся в GitHub Container Registry
             echo "${GH_TOKEN}" | docker login ghcr.io -u "${GH_ACTOR}" --password-stdin
             
+            # Создаём shared network если не существует
+            docker network create ai-stock-shared 2>/dev/null || echo "Network ai-stock-shared already exists"
+            
             # Экспортируем версию для docker compose
             export APP_VERSION="${APP_VERSION}"
             echo "📦 Pulling image version: ${APP_VERSION}"
@@ -382,6 +385,9 @@ jobs:
             # Логинимся в GitHub Container Registry
             echo "${GH_TOKEN}" | docker login ghcr.io -u "${GH_ACTOR}" --password-stdin
             
+            # Создаём shared network если не существует
+            docker network create ai-stock-shared 2>/dev/null || echo "Network ai-stock-shared already exists"
+            
             # Экспортируем версию для docker compose
             export APP_VERSION="${APP_VERSION}"
             echo "📦 Pulling image version: ${APP_VERSION}"
@@ -422,46 +428,61 @@ jobs:
   notify:
     name: Notify
     runs-on: ubuntu-latest
-    needs: [build, deploy-production, deploy-development]
-    # always() гарантирует запуск даже при skipped зависимостях
-    # Примечание: deploy-production и deploy-development имеют взаимоисключающие условия,
-    # поэтому одна из них всегда будет skipped - это ожидаемое поведение
+    # Only depend on build - deploy jobs have mutually exclusive conditions
+    # and would cause issues with needs dependency resolution
+    needs: build
     if: always()
 
     steps:
       - name: Deployment Summary
+        uses: actions/github-script@v7
         env:
           BUILD_VERSION: ${{ needs.build.outputs.version || 'unknown' }}
-          BUILD_RESULT: ${{ needs.build.result }}
-          # skipped - ожидаемое значение для job с невыполненным условием
-          PROD_RESULT: ${{ needs.deploy-production.result }}
-          DEV_RESULT: ${{ needs.deploy-development.result }}
-        run: |
-          echo "📊 Deployment Summary"
-          echo "====================="
-          echo "Version: ${BUILD_VERSION}"
-          echo "Build: ${BUILD_RESULT}"
-          echo "Production: ${PROD_RESULT:-skipped}"
-          echo "Development: ${DEV_RESULT:-skipped}"
-          
-          # Проверяем критические ошибки
-          if [[ "${BUILD_RESULT}" != "success" ]]; then
-            echo "❌ Build failed!"
-            exit 1
-          fi
-          
-          if [[ "${PROD_RESULT}" == "success" ]]; then
-            echo "🌐 Production: https://ai-stock-keeper.hrustalq.dev"
-          fi
-          
-          if [[ "${DEV_RESULT}" == "success" ]]; then
-            echo "🌐 Development: https://ai-stock-keeper-dev.hrustalq.dev"
-          fi
-          
-          # Проверяем ошибки деплоя (skipped - это OK, failure - нет)
-          if [[ "${PROD_RESULT}" == "failure" || "${DEV_RESULT}" == "failure" ]]; then
-            echo "❌ Deployment had failures!"
-            exit 1
-          fi
-          
-          echo "✅ Deployment workflow completed!"
+        with:
+          script: |
+            const { BUILD_VERSION } = process.env;
+            
+            // Fetch all jobs for this workflow run
+            const { data: { jobs } } = await github.rest.actions.listJobsForWorkflowRun({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              run_id: context.runId
+            });
+            
+            // Find job statuses by name
+            const buildJob = jobs.find(j => j.name === 'Build Docker Image');
+            const prodJob = jobs.find(j => j.name === 'Deploy to Production');
+            const devJob = jobs.find(j => j.name === 'Deploy to Development');
+            
+            const buildResult = buildJob?.conclusion || 'unknown';
+            const prodResult = prodJob?.conclusion || 'skipped';
+            const devResult = devJob?.conclusion || 'skipped';
+            
+            console.log('📊 Deployment Summary');
+            console.log('=====================');
+            console.log(`Version: ${BUILD_VERSION}`);
+            console.log(`Build: ${buildResult}`);
+            console.log(`Production: ${prodResult}`);
+            console.log(`Development: ${devResult}`);
+            
+            // Check for critical errors
+            if (buildResult !== 'success') {
+              core.setFailed('❌ Build failed!');
+              return;
+            }
+            
+            if (prodResult === 'success') {
+              console.log('🌐 Production: https://ai-stock-keeper.hrustalq.dev');
+            }
+            
+            if (devResult === 'success') {
+              console.log('🌐 Development: https://ai-stock-keeper-dev.hrustalq.dev');
+            }
+            
+            // Check for deployment failures (skipped is OK, failure is not)
+            if (prodResult === 'failure' || devResult === 'failure') {
+              core.setFailed('❌ Deployment had failures!');
+              return;
+            }
+            
+            console.log('✅ Deployment workflow completed!');

@@ -77,6 +77,9 @@ usermod -aG docker deploy
 systemctl enable docker
 systemctl start docker
 
+# Создаём shared network для коммуникации между dev и prod контейнерами
+docker network create ai-stock-shared 2>/dev/null || echo "Network ai-stock-shared already exists"
+
 echo "✅ Docker installed"
 
 # ============================================

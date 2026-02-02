@@ -62,15 +62,24 @@ export function BarcodeScanner({
     // Проверяем что сканер всё ещё должен быть активен (race condition prevention)
     if (!isActiveRef.current) return;
 
-    // Ждём пока элемент получит размеры (важно для SSR)
+    // Ждём пока элемент получит валидные размеры (важно для SSR и CSS layout)
     const target = scannerRef.current;
     const rect = target.getBoundingClientRect();
-    if (rect.width === 0 || rect.height === 0) {
+    
+    // Проверяем на валидные размеры: не 0, не NaN, и достаточно большие для сканирования
+    const MIN_DIMENSION = 100; // Минимальный размер для надёжной работы
+    const hasValidDimensions = 
+      Number.isFinite(rect.width) && 
+      Number.isFinite(rect.height) && 
+      rect.width >= MIN_DIMENSION && 
+      rect.height >= MIN_DIMENSION;
+    
+    if (!hasValidDimensions) {
       // Очищаем предыдущий таймаут если есть
       if (retryTimeoutRef.current) {
         clearTimeout(retryTimeoutRef.current);
       }
-      // Повторяем попытку через 100ms
+      // Повторяем попытку через 100ms (даём время на layout)
       retryTimeoutRef.current = setTimeout(() => void initScanner(), 100);
       return;
     }
@@ -87,9 +96,10 @@ export function BarcodeScanner({
       
       setHasPermission(true);
 
-      // Используем фиксированные размеры для предотвращения NaN ошибок
-      const targetWidth = Math.max(rect.width, 640);
-      const targetHeight = Math.max(rect.height, 480);
+      // Используем проверенные размеры (уже валидированы выше)
+      // Гарантируем минимум 640x480 для оптимальной работы Quagga
+      const targetWidth = Math.max(Math.floor(rect.width), 640);
+      const targetHeight = Math.max(Math.floor(rect.height), 480);
 
       await Quagga.init(
         {
@@ -101,12 +111,8 @@ export function BarcodeScanner({
               width: { min: 320, ideal: targetWidth, max: 1920 },
               height: { min: 240, ideal: targetHeight, max: 1080 },
             },
-            area: { // Ограничиваем область сканирования
-              top: "20%",
-              right: "10%",
-              left: "10%",
-              bottom: "20%",
-            },
+            // Примечание: area убрана - процентные вычисления могут вызывать
+            // NaN ошибки при нестабильных размерах контейнера
           },
           decoder: {
             readers: [

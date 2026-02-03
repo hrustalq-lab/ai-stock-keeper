@@ -345,6 +345,7 @@ model InvoiceLineItem {
   invoice      Invoice       @relation(fields: [invoiceId], references: [id])
   transactions Transaction[]
 
+  @@unique([invoiceId, lineNumber])
   @@index([invoiceId])
   @@index([sku])
   @@map("invoice_line_items")

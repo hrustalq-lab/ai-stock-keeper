@@ -82,6 +82,11 @@
     - Mock vs real sandbox strategies
     - CI/CD (GitHub Actions) setup
 
+11. **[INVOICE-PROCESSING-SCHEMA.md](./INVOICE-PROCESSING-SCHEMA.md)** — Invoice processing data model
+    - Purchase orders, invoices, and line items
+    - Processing workflow states and key fields (`processingStatus`, `receivedQty`, `isEdited`)
+    - Relationship to `Document1C` and `Transaction` for traceability
+
 ## Architecture Overview
 
 ```
@@ -161,5 +166,6 @@ docs/
 ├── PHASE-3.md                   # Phase 3 — завершён ✅
 ├── PHASE-4.md                   # Phase 4 — завершён ✅
 ├── PHASE-5.md                   # Phase 5 — планирование 📋
+├── INVOICE-PROCESSING-SCHEMA.md # Invoice processing schema & data flow
 └── INTEGRATION-TESTING-PLAN.md  # Стратегия тестирования
 ```

@@ -34,19 +34,25 @@ model Inventory {
 // Транзакции (локальные, до синхронизации с 1C)
 // ============================================
 model Transaction {
-  id            Int       @id @default(autoincrement())
-  type          String    @db.VarChar(20) // intake, picking, transfer, adjustment
-  sku           String    @db.VarChar(50)
-  quantity      Int
-  fromWarehouse String?   @map("from_warehouse") @db.VarChar(50)
-  toWarehouse   String?   @map("to_warehouse") @db.VarChar(50)
-  documentId    String?   @map("document_id") @db.VarChar(100) // Ссылка на документ 1C
-  syncedWith1C  Boolean   @default(false) @map("synced_with_1c")
-  syncedAt      DateTime? @map("synced_at")
-  createdAt     DateTime  @default(now()) @map("created_at")
+  id                 Int       @id @default(autoincrement())
+  type               String    @db.VarChar(20) // intake, picking, transfer, adjustment
+  sku                String    @db.VarChar(50)
+  quantity           Int
+  fromWarehouse      String?   @map("from_warehouse") @db.VarChar(50)
+  toWarehouse        String?   @map("to_warehouse") @db.VarChar(50)
+  documentId         String?   @map("document_id") @db.VarChar(100) // Ссылка на документ 1C
+  syncedWith1C       Boolean   @default(false) @map("synced_with_1c")
+  syncedAt           DateTime? @map("synced_at")
+  createdAt          DateTime  @default(now()) @map("created_at")
+  invoiceLineItemId  Int?      @map("invoice_line_item_id") // Traceability from invoice line
+  oneCLineDocumentId String?   @map("one_c_line_document_id") @db.VarChar(100) // Idempotent retry
+
+  invoiceLineItem InvoiceLineItem? @relation(fields: [invoiceLineItemId], references: [id])
 
   @@index([sku])
   @@index([syncedWith1C])
+  @@index([invoiceLineItemId])
+  @@unique([oneCLineDocumentId])
   @@map("transactions")
 }
 
@@ -64,8 +70,12 @@ model Document1C {
   lastSyncError String?   @map("last_sync_error")
   syncedAt      DateTime? @map("synced_at")
   createdAt     DateTime  @default(now()) @map("created_at")
+  invoiceId     Int?      @map("invoice_id") // Links 1C document created from invoice processing
+
+  invoice Invoice? @relation(fields: [invoiceId], references: [id])
 
   @@index([docNumber])
+  @@index([invoiceId])
   @@map("documents_1c")
 }
 
@@ -226,6 +236,118 @@ model ReorderRecommendation {
   @@index([urgency])
   @@index([status])
   @@map("reorder_recommendations")
+}
+
+// ============================================
+// Invoice processing: Purchase orders (from 1C or manual)
+// ============================================
+model PurchaseOrder {
+  id            Int       @id @default(autoincrement())
+  poNumber      String    @unique @map("po_number") @db.VarChar(50)
+  supplier      String    @db.VarChar(255)
+  warehouse     String    @db.VarChar(50)
+  orderDate     DateTime  @map("order_date")
+  expectedDate  DateTime? @map("expected_date")
+  status        String    @db.VarChar(20) // open, partial, fulfilled, cancelled
+  totalAmount   Decimal?  @map("total_amount") @db.Decimal(12, 2)
+  oneCDocumentId String?  @map("one_c_document_id") @db.VarChar(100)
+  syncedAt      DateTime  @default(now()) @map("synced_at")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  items   PurchaseOrderItem[]
+  invoices Invoice[]
+
+  @@index([poNumber])
+  @@index([supplier])
+  @@index([status])
+  @@map("purchase_orders")
+}
+
+// ============================================
+// Invoice processing: Purchase order line items
+// ============================================
+model PurchaseOrderItem {
+  id              Int      @id @default(autoincrement())
+  purchaseOrderId Int      @map("purchase_order_id")
+  sku             String   @db.VarChar(50)
+  productName     String   @map("product_name") @db.VarChar(255)
+  orderedQty      Int      @map("ordered_qty")
+  receivedQty     Int      @default(0) @map("received_qty")
+  unitPrice       Decimal  @map("unit_price") @db.Decimal(10, 2)
+  vatRate         Decimal  @map("vat_rate") @db.Decimal(5, 2)
+
+  purchaseOrder PurchaseOrder @relation(fields: [purchaseOrderId], references: [id])
+
+  @@index([purchaseOrderId])
+  @@index([sku])
+  @@map("purchase_order_items")
+}
+
+// ============================================
+// Invoice processing: Invoices (uploaded/OCR, matched to PO)
+// Workflow states: pending → processing → review → approved → completed | failed
+// ============================================
+model Invoice {
+  id               Int       @id @default(autoincrement())
+  invoiceNumber    String    @map("invoice_number") @db.VarChar(50)
+  invoiceDate      DateTime  @map("invoice_date")
+  invoiceType      String    @map("invoice_type") @db.VarChar(20) // TORG12, TTN, INVOICE
+  supplier         String    @db.VarChar(255)
+  warehouse        String    @db.VarChar(50)
+  filePath         String    @map("file_path") @db.VarChar(500)
+  fileSize         Int       @map("file_size")
+  fileType         String    @map("file_type") @db.VarChar(20) // pdf, jpeg, png
+  processingStatus String   @default("pending") @map("processing_status") @db.VarChar(20) // pending, processing, review, approved, completed, failed
+  ocrMethod        String?   @map("ocr_method") @db.VarChar(20) // tesseract, cloud, text_extraction
+  ocrConfidence    Decimal?  @map("ocr_confidence") @db.Decimal(5, 2)
+  totalAmount      Decimal?  @map("total_amount") @db.Decimal(12, 2)
+  totalVat         Decimal?  @map("total_vat") @db.Decimal(12, 2)
+  matchedPoId      Int?      @map("matched_po_id")
+  hasDiscrepancies Boolean  @default(false) @map("has_discrepancies")
+  documentId       String?   @map("document_id") @db.VarChar(100) // 1C document ID after approval
+  createdAt        DateTime  @default(now()) @map("created_at")
+  processedAt      DateTime? @map("processed_at")
+  approvedAt       DateTime? @map("approved_at")
+
+  lineItems   InvoiceLineItem[]
+  matchedPo   PurchaseOrder?    @relation(fields: [matchedPoId], references: [id])
+  documents1C Document1C[]
+
+  @@index([invoiceNumber])
+  @@index([supplier])
+  @@index([processingStatus])
+  @@index([matchedPoId])
+  @@map("invoices")
+}
+
+// ============================================
+// Invoice processing: Invoice line items (OCR or manual, editable)
+// ============================================
+model InvoiceLineItem {
+  id             Int     @id @default(autoincrement())
+  invoiceId      Int     @map("invoice_id")
+  lineNumber     Int     @map("line_number")
+  sku            String  @db.VarChar(50)
+  productName    String  @map("product_name") @db.VarChar(255)
+  quantity       Int
+  unitPrice      Decimal @map("unit_price") @db.Decimal(10, 2)
+  vatRate        Decimal @map("vat_rate") @db.Decimal(5, 2)
+  vatAmount      Decimal @map("vat_amount") @db.Decimal(10, 2)
+  lineTotal      Decimal @map("line_total") @db.Decimal(12, 2)
+  isEdited       Boolean @default(false) @map("is_edited")
+  originalSku    String?  @map("original_sku") @db.VarChar(50)
+  originalQty    Int?     @map("original_qty")
+  status         String  @default("pending") @db.VarChar(20) // pending, approved, edited, skipped
+  expectedQty    Int?     @map("expected_qty")
+  qtyDiscrepancy Int?     @map("qty_discrepancy")
+
+  invoice      Invoice       @relation(fields: [invoiceId], references: [id])
+  transactions Transaction[]
+
+  @@index([invoiceId])
+  @@index([sku])
+  @@map("invoice_line_items")
 }
 
 // ============================================

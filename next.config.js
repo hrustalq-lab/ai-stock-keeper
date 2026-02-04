@@ -6,7 +6,7 @@ import "./src/env.js";
 
 /** @type {import("next").NextConfig} */
 const config = {
-  // Standalone output для Docker
+  // Standalone output для Docker / 
   output: "standalone",
 };
 
